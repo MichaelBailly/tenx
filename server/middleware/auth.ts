@@ -1,16 +1,7 @@
 import type { H3Event } from "h3";
 import { defineEventHandler, getRequestURL } from "h3";
 import { MongoClient } from "mongodb";
-
-type User = {
-  _id: string;
-  sessions: {
-    _id: string;
-    ts_creation: number;
-    ts_last_usage: number;
-    lang: string;
-  }[];
-};
+import type { MongoUser } from "~/types/mongo";
 
 // Helper function to create mongo client to avoid repetition
 const createMongoClient = () => {
@@ -20,13 +11,13 @@ const createMongoClient = () => {
 };
 
 // Check if the session is valid and return user if found
-async function validateSession(sessionId: string): Promise<User | null> {
+async function validateSession(sessionId: string): Promise<MongoUser | null> {
   let client = null;
   try {
     client = createMongoClient();
     await client.connect();
     const db = client.db("d10");
-    const users = db.collection<User>("users");
+    const users = db.collection<MongoUser>("users");
 
     // Find user with this session
     const user = await users.findOne(
@@ -55,7 +46,7 @@ async function updateSessionUsage(
     client = createMongoClient();
     await client.connect();
     const db = client.db("d10");
-    const users = db.collection<User>("users");
+    const users = db.collection<MongoUser>("users");
 
     const now = Date.now();
     await users.updateOne(

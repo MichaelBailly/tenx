@@ -1,34 +1,6 @@
 import { createHash } from "crypto";
 import { MongoClient } from "mongodb";
-
-type User = {
-  _id: string; // Unique identifier for the user
-  depth: number; // Depth level of the user in the hierarchy
-  login: string; // User's login name
-  parent: string; // Parent user ID
-  password: string; // Hashed password (SHA1)
-  playlists: {
-    _id: string; // Unique identifier for the playlist
-    name: string; // Name of the playlist
-    songs: string[]; // Array of song IDs in the playlist
-  }[]; // Array of playlists
-  sessions: {
-    _id: string; // Unique identifier for the session
-    ts_creation: number; // Timestamp of session creation (JS timestamp)
-    ts_last_usage: number; // Timestamp of last session usage (JS timestamp)
-    lang: string; // Language preference for the session
-  }[]; // Array of session objects
-  preferences: {
-    playlist: {
-      type: string; // Type of playlist (e.g., "default")
-    };
-    volume: number; // User's preferred volume level (between 0 and 1 )
-    dislikes: Record<string, boolean>; // Map of disliked song IDs
-    likes: Record<string, boolean>; // Map of liked song IDs
-    hiddenReviewHelper: boolean; // Whether the review helper is hidden
-    audioFade: boolean; // nr of seconds for the audio fade feature
-  };
-};
+import type { MongoUser } from "~/types/mongo";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -48,7 +20,7 @@ export default defineEventHandler(async (event) => {
     );
     await client.connect();
     const db = client.db("d10");
-    const users = db.collection<User>("users");
+    const users = db.collection<MongoUser>("users");
 
     // Hash the password (SHA1)
     const hashedPassword = createHash("sha1").update(password).digest("hex");

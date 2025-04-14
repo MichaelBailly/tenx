@@ -1,15 +1,6 @@
 import type { Document } from "mongodb";
 import { MongoClient } from "mongodb";
-
-type User = {
-  _id: string;
-  sessions: {
-    _id: string;
-    ts_creation: number;
-    ts_last_usage: number;
-    lang: string;
-  }[];
-};
+import type { MongoUser } from "~/types/mongo";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -23,7 +14,7 @@ export default defineEventHandler(async (event) => {
       );
       await client.connect();
       const db = client.db("d10");
-      const users = db.collection<User>("users");
+      const users = db.collection<MongoUser>("users");
 
       // Remove the session from the user document
       await users.updateOne({ "sessions._id": sessionId }, {

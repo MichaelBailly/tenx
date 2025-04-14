@@ -1,14 +1,10 @@
 import { computed, ref } from "vue";
+import type { ClientUser } from "~/types/mongo";
 
 // Types
-type User = {
-  userId: string;
-  // Add other user fields as needed
-};
-
 type AuthState = {
   authenticated: boolean;
-  user: User | null;
+  user: ClientUser | null;
   loading: boolean;
 };
 
@@ -36,6 +32,7 @@ export function useAuth() {
         authState.value.authenticated = true;
         authState.value.user = {
           userId: data.value.userId,
+          username: "", // We don't receive username from the status endpoint yet
         };
       } else {
         authState.value.authenticated = false;
