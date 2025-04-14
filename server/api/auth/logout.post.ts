@@ -1,19 +1,15 @@
-import { SessionService } from "~/server/services/SessionService";
+import { AuthService } from "~/server/services/AuthService";
 
 export default defineEventHandler(async (event) => {
   try {
-    // Get session service instance
-    const sessionService = SessionService.getInstance();
+    const authService = AuthService.getInstance();
+    const result = await authService.logoutUser(event);
 
-    // Get session cookie
-    const sessionId = sessionService.getSessionIdFromCookie(event);
-
-    if (sessionId) {
-      // End the session (removes from DB and clears cookie)
-      await sessionService.endSession(sessionId, event);
-    } else {
-      // Still clear the cookie even if no session found
-      sessionService.clearSessionCookie(event);
+    if (!result.success) {
+      return {
+        success: false,
+        error: result.error || "An error occurred during logout",
+      };
     }
 
     return { success: true };

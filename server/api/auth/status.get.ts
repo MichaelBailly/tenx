@@ -1,5 +1,5 @@
 import { defineEventHandler, setResponseStatus } from "h3";
-import { Config } from "~/server/utils/config";
+import { SessionService } from "~/server/services/SessionService";
 
 export default defineEventHandler((event) => {
   // Return authentication status from the event context
@@ -16,10 +16,11 @@ export default defineEventHandler((event) => {
 
   // Add better debug info if not in production
   if (process.env.NODE_ENV !== "production") {
+    const sessionService = SessionService.getInstance();
+    const sessionCookie = sessionService.getSessionIdFromCookie(event);
+
     console.log(`Auth status API called for path: ${event.path}`);
-    console.log(
-      `Session cookie exists: ${!!getCookie(event, Config.session.cookie.name)}`
-    );
+    console.log(`Session cookie exists: ${!!sessionCookie}`);
     console.log(`Auth context: ${JSON.stringify(event.context.auth)}`);
     console.log("Status response:", {
       authenticated: !!auth.authenticated,

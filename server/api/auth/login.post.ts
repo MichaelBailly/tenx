@@ -1,4 +1,4 @@
-import { authenticateUser, createSession } from "~/server/utils/auth";
+import { AuthService } from "~/server/services/AuthService";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -12,23 +12,18 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    // Authenticate user
-    const user = await authenticateUser(username, password);
+    const authService = AuthService.getInstance();
+    const result = await authService.loginUser(username, password, event);
 
-    if (!user) {
+    if (!result.success) {
       throw createError({
         statusCode: 401,
-        message: "Invalid credentials",
+        message: result.error || "Invalid credentials",
       });
     }
 
-    // Create a new session and set cookie
-    await createSession(user._id, event);
-
-    // Return success without sensitive data
-    return {
-      success: true,
-    };
+    // Return success
+    return { success: true };
   } catch (error: unknown) {
     // Don't expose internal errors to client
     if (error instanceof Error && !("statusCode" in error)) {

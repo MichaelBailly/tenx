@@ -1,16 +1,13 @@
 import type { H3Event } from "h3";
 import { defineEventHandler, getRequestURL, sendRedirect } from "h3";
-import {
-  clearSessionCookie,
-  setSessionCookie,
-  validateSession,
-} from "~/server/utils/auth";
+import { SessionService } from "~/server/services/SessionService";
 import { Config } from "~/server/utils/config";
 
 export default defineEventHandler(async (event: H3Event) => {
   const url = getRequestURL(event);
   const path = url.pathname;
-  const sessionCookie = getCookie(event, Config.session.cookie.name);
+  const sessionService = SessionService.getInstance();
+  const sessionCookie = sessionService.getSessionIdFromCookie(event);
 
   // For debugging
   if (process.env.NODE_ENV !== "production") {
@@ -36,7 +33,7 @@ export default defineEventHandler(async (event: H3Event) => {
     }
 
     // For status endpoint, validate session but don't return errors
-    const { valid, user } = await validateSession(sessionCookie);
+    const { valid, user } = await sessionService.validateSession(sessionCookie);
     if (valid && user) {
       event.context.auth = {
         authenticated: true,
@@ -94,13 +91,13 @@ export default defineEventHandler(async (event: H3Event) => {
   }
 
   // Validate the session
-  const { valid, user } = await validateSession(sessionCookie);
+  const { valid, user } = await sessionService.validateSession(sessionCookie);
 
   if (!valid || !user) {
     if (process.env.NODE_ENV !== "production") {
       console.log("Invalid session, clearing cookie");
     }
-    clearSessionCookie(event);
+    sessionService.clearSessionCookie(event);
 
     if (path.startsWith("/api")) {
       return createError({
@@ -126,7 +123,7 @@ export default defineEventHandler(async (event: H3Event) => {
     if (process.env.NODE_ENV !== "production") {
       console.log("Refreshing session cookie");
     }
-    setSessionCookie(event, sessionCookie);
+    sessionService.setSessionCookie(event, sessionCookie);
   }
 
   // At this point, we know the session is valid. Set authenticated user details in context
