@@ -7,7 +7,10 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "test": "vitest",
+    "test:e2e": "playwright test",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@nuxt/eslint": "^1.3.0",
@@ -20,8 +23,15 @@
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.42.1",
     "@tailwindcss/vite": "^4.1.3",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "@vitest/coverage-v8": "^1.3.1",
+    "@vue/test-utils": "^2.4.6",
     "autoprefixer": "^10.4.21",
-    "tailwindcss": "^4.1.3"
+    "happy-dom": "^13.6.2",
+    "tailwindcss": "^4.1.3",
+    "vite": "^5.1.4",
+    "vitest": "^1.6.1"
   }
 }
