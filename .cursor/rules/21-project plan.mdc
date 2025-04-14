@@ -24,7 +24,7 @@ Goal: Allow users to securely access the application.
 * **US1.2:** As a registered user, I want to log in with my username and password so that I can access my music library.
 
 Details for US1.2:
-The password is encrypted as sha1 
+The password is encrypted as sha1 in the datastore ("password" property). If the login is successful, user is redirected to /app . Otherwise, display a generic error message.
 
 * **US1.3:** As a logged-in user, I want the application to remember my session so that I don't have to log in every time I visit.
 * **US1.4:** As a logged-in user, I am redirected to the /app page after login

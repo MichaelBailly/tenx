@@ -115,27 +115,6 @@ The albums collection has the following schema:
 
 Users are stored in a users collection.
 
-```javascript
-[
-  {
-    $lookup: {
-      from: "songs",
-      localField: "playlists",
-      foreignField: "_id",
-      as: "playlists",
-    },
-  },
-  {
-    $lookup: {
-      from: "sessions",
-      localField: "_id",
-      foreignField: "user",
-      as: "sessions",
-    },
-  },
-];
-```
-
 The users collection has the following schema:
 
 ```javascript
@@ -144,7 +123,7 @@ The users collection has the following schema:
   depth: number; // Depth level of the user in the hierarchy
   login: string; // User's login name
   parent: string; // Parent user ID
-  password: string; // Hashed password
+  password: string; // Hashed password (SHA1)
   playlists: {
     _id: string; // Unique identifier for the playlist
     name: string; // Name of the playlist
