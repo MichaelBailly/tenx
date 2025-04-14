@@ -1,22 +1,19 @@
-import { endSession } from "~/server/utils/auth";
-import { Config } from "~/server/utils/config";
+import { SessionService } from "~/server/services/SessionService";
 
 export default defineEventHandler(async (event) => {
   try {
+    // Get session service instance
+    const sessionService = SessionService.getInstance();
+
     // Get session cookie
-    const sessionId = getCookie(event, Config.session.cookie.name);
+    const sessionId = sessionService.getSessionIdFromCookie(event);
 
     if (sessionId) {
       // End the session (removes from DB and clears cookie)
-      await endSession(sessionId, event);
+      await sessionService.endSession(sessionId, event);
     } else {
       // Still clear the cookie even if no session found
-      deleteCookie(event, Config.session.cookie.name, {
-        httpOnly: Config.session.cookie.httpOnly,
-        path: Config.session.cookie.path,
-        secure: Config.session.cookie.secure,
-        sameSite: Config.session.cookie.sameSite,
-      });
+      sessionService.clearSessionCookie(event);
     }
 
     return { success: true };
