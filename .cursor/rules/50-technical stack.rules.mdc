@@ -1,0 +1,48 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Technical Stack
+
+- TypeScript and Vue js frontend with Tailwind CSS.
+- Nuxt.js as application server, used for server-side rendering, static site generation, and many other things. We use bun Javascript engine.
+- MongoDB as the database. Using the mongodb driver, no ORM or ODM.
+
+- Focus on easy and readability code, over being performant.
+- Fully implement all requested functionality. Ensure code is complete!
+- Verify thoroughly finalised.
+- Use early returns whenever possible to make the code more readable.
+- Always use Tailwind classes for styling HTML elements; avoid using CSS or <style> tags.
+- Always use composition api.
+- Use descriptive variable and function/const names. Also, event functions should be named with a “handle” prefix, like “handleClick” for onClick and “handleKeyDown” for onKeyDown.
+- Implement accessibility features on elements. For example, a tag should have a tabindex=“0”, aria-label, on:click, and on:keydown, and similar attributes.
+
+---
+
+description: Enforces the use of TypeScript for type safety in Vue 3 projects, especially for .ts files.
+globs: src/\*_/_.ts
+
+---
+
+- Use TypeScript for type safety
+- Implement proper props and emits definitions
+
+---
+
+description: General guidelines for Vue 3 components using the Composition API. This includes best practices and recommendations for component structure and reactive state management.
+globs: src/\*_/_.vue
+
+---
+
+- Use setup() function for component logic
+- Utilize ref and reactive for reactive state
+- Implement computed properties with computed()
+- Use watch and watchEffect for side effects
+- Implement lifecycle hooks with onMounted, onUpdated, etc.
+- Utilize provide/inject for dependency injection
+- Avoid using provide/inject
+- Utilize Vue 3's Teleport component when needed
+- Use Suspense for async components
+- Implement proper error handling
+- Follow Vue 3 style guide and naming conventions

@@ -1,0 +1,216 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# tenX in two sentences
+
+tenX is a web-based application designed to function as a personal music jukebox. It allows users to upload their music files, manage them, create playlists, and stream the music through a web browser using HTML5 audio capabilities
+
+# tenX Web App - Feature List
+
+This document outlines the user-facing features of the tenX music jukebox application.
+
+I. Music & Library Management
+
+    Upload Music:
+
+        Users can upload their personal audio files (supports common formats like MP3, FLAC, M4A, OGG).
+
+        Users can upload image files to serve as album artwork.
+
+    Metadata Management:
+
+        Users can view detailed metadata for each song (Title, Artist, Album, Genre, Year, Track Number, Duration, etc.).
+
+        Users can edit the primary metadata (Title, Artist, Album, Genre, Track Number, Year) for songs they have permission to modify (usually their own uploads or if they are an admin).
+
+    Upload Review Process:
+
+        Newly uploaded songs may enter a "review" state.
+
+        Users must review and confirm/correct the automatically extracted metadata (Title, Artist, Genre, etc.) for these songs.
+
+        Songs only become fully available in the main library after being reviewed and validated.
+
+    Song Deletion:
+
+        Users can delete songs they uploaded.
+
+        Administrators can delete any song.
+
+    Duplicate Prevention:
+
+        The system attempts to prevent identical songs from being uploaded multiple times.
+
+    Image Association:
+
+        Users can associate uploaded images (album covers) with specific songs or albums.
+
+        Users can remove image associations from songs.
+
+II. Playback & Playlist Features
+
+    Core Playback:
+
+        Play selected songs or playlists directly within the web browser.
+
+        Standard playback controls: Play, Pause, Next Track, Previous Track.
+
+        Adjust volume level (this setting is saved for the user).
+
+        Seek/scrub through the currently playing song using a progress bar.
+
+    Track Information Display:
+
+        View Title, Artist, and Album of the currently playing song.
+
+        Display associated album artwork for the current song.
+
+        Show elapsed and remaining time for the current track.
+
+        View total duration of the current track.
+
+    Playlist Management:
+
+        Create new personal playlists.
+
+        Add individual songs or multiple songs to playlists.
+
+        Remove songs from playlists.
+
+        Reorder songs within a playlist via drag-and-drop or other controls.
+
+        Save created/modified playlists.
+
+        Load saved playlists for playback.
+
+        Rename existing playlists.
+
+        Delete playlists.
+
+    Enhanced Playback Options:
+
+        Optional smooth cross-fade effect between consecutive tracks.
+
+        Optional setting to adjust the playback speed of songs.
+
+        (Visual) Optional audio spectrum visualization during playback.
+
+    Radio Mode:
+
+        Initiate a "radio" playback mode that automatically generates a continuous stream of music (likely based on selected genres or library-wide random selection).
+
+III. Library Browsing & Discovery
+
+    Browse Library:
+
+        View the entire music collection.
+
+        Navigate the library using different views:
+
+            By Artist
+
+            By Album
+
+            By Genre
+
+            By Song Title (alphabetical list)
+
+            By Recently Added Songs ("Creations")
+
+            By Most Played Songs ("Hits")
+
+    Detailed Views:
+
+        View a dedicated page for each Artist, listing their associated albums and songs.
+
+        View a dedicated page for each Album, listing its tracks in order.
+
+    Search:
+
+        Search the entire library by keywords matching Song Title, Artist Name, or Album Title.
+
+    Recommendations & Info:
+
+        View artists related to a selected artist (based on collaborations or shared songs).
+
+        View summary statistics for specific Genres (e.g., total number of songs, artists, albums, total listening time).
+
+        Browse albums grouped by the first letter of the album title.
+
+IV. User Accounts & Personalization
+
+    Authentication:
+
+        User registration (potentially via invites only).
+
+        Secure login with username and password.
+
+    Preferences & History:
+
+        Mark songs as "liked" or "disliked".
+
+        View a list of all personally liked songs.
+
+        View personal listening history (e.g., recently played songs, potentially play counts per song).
+
+        Save personal preferences for UI elements (e.g., show/hide certain info panels).
+
+        Save personal preference for audio settings (e.g., volume, cross-fade duration).
+
+    User Content:
+
+        View a list of all songs personally uploaded by the current user.
+
+        (Admin) View and manage all users.
+
+V. Social Features (Invite System)
+
+    Invite Management:
+
+        Users may be granted a certain number of invites.
+
+        Users can view their remaining invite count.
+
+        Users can send email invitations containing a unique registration link to others (consumes an invite credit).
+
+    Registration:
+
+        New users can register for an account using a valid invite link.
+
+VI. Advanced & Utility Features
+
+    Remote Control:
+
+        Access a separate, simplified web interface (designed for mobile devices).
+
+        Log in to the remote control interface.
+
+        Control the main playback session remotely: Play/Pause, Next, Previous, Volume adjustment.
+
+        (Potentially) View current track info and browse/select music remotely.
+
+        Log out of the remote control session.
+
+    API Key Management:
+
+        (For advanced users/developers) Generate API keys for programmatic access to the application.
+
+        View and manage (e.g., delete) personal API keys.
+
+        Assign descriptions to API keys for identification.
+
+    Multi-Language Support:
+
+        The user interface is available in multiple languages (English and French are present).
+
+    Notifications:
+
+        Receive on-screen notifications for certain events (e.g., track changes, errors).
+
+    Background Processing:
+
+        Music uploads and processing happen in the background, allowing users to continue using the app.
+
+        Users receive feedback on the progress of uploads/processing.

@@ -1,0 +1,148 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# **10er10 Redevelopment Project Plan**
+
+This plan outlines the development phases for rebuilding the 10er10 web application, breaking down features into Epics and User Stories.  
+**Guiding Principles:**
+
+* **Phased Approach:** Deliver core value early.  
+* **Priority:** Focus on Library and Player functionality first (Phase 1).  
+* **Authentication First:** Users must log in to access core features.  
+* **Dependencies:** User stories are ordered considering dependencies where possible.
+
+## **Phase 1: Core Library & Player (MVP)**
+
+This phase focuses on establishing the essential functionalities: user login, basic library browsing, and music playback.
+
+Epic 1: User Authentication & Management (Foundation)  
+Goal: Allow users to securely access the application.
+
+* **US1.1:** As a user, when I browse to /login, I want to see a login page so that I can enter my credentials (username / password).  
+* **US1.2:** As a registered user, I want to log in with my username and password so that I can access my music library.
+
+Details for US1.2:
+The password is encrypted as sha1 
+
+* **US1.3:** As a logged-in user, I want the application to remember my session so that I don't have to log in every time I visit.
+* **US1.4:** As a logged-in user, I am redirected to the /app page after login
+* **US1.5:** As a logged-in user, I want to be able to log out so that I can end my session securely.
+
+Epic 2: Music Library Browsing & Search (Core Library Interaction)  
+Goal: Allow users to view and find their music.  
+(Dependency: Epic 1 \- User must be logged in for library access)
+
+* **US3.1:** As a logged-in user, I want to view a list of all my accessible songs, displaying basic information (Title, Artist, Album, Duration).  
+* **US3.2:** As a logged-in user, I want to browse my library filtered by Artist so that I can see all songs by a specific artist.  
+* **US3.3:** As a logged-in user, I want to browse my library filtered by Album so that I can see all songs on a specific album.  
+* **US3.4:** As a logged-in user, I want to perform a basic search by keyword (matching Title, Artist, or Album) so that I can quickly find specific music.  
+* **US3.5:** As a logged-in user, I want library views (all songs, artist, album, search results) to be sortable (e.g., by Title, Artist, Album).
+
+Epic 3: Audio Player & Playback Controls (Core Player)  
+Goal: Enable users to listen to their music.  
+(Dependency: Epic 3 \- User needs to select music from the library)
+
+* **US4.1:** As a logged-in user, I want to select a song from the library or search results to start playback.  
+* **US4.2:** As a logged-in user, I want standard playback controls (Play, Pause) for the current song.  
+* **US4.3:** As a logged-in user, I want controls to skip to the Next or Previous track in the current context (e.g., album view, playlist view \- basic queue initially).  
+* **US4.4:** As a logged-in user, I want to see the currently playing track's information (Title, Artist, Album).  
+* **US4.5:** As a logged-in user, I want to see a progress bar indicating the current position within the song and the song's total duration.  
+* **US4.6:** As a logged-in user, I want to be able to click/drag the progress bar to seek to a specific point in the song.  
+* **US4.7:** As a logged-in user, I want to control the playback volume.  
+* **US4.8:** As a logged-in user, I want the player to automatically play the next song in the current context (e.g., album) when the current song finishes.
+
+Epic 4: UI/UX Foundation & Shell  
+Goal: Establish the basic layout and navigation structure.  
+(Dependency: Parallel development with other Phase 1 Epics)
+
+* **US5.1:** As a user, I want a consistent application shell (header, main content area, player bar) for navigation and interaction.  
+* **US5.2:** As a logged-in user, I want clear navigation links to access different library views (All Songs, Artists, Albums, Search).  
+* **US5.3:** As a logged-in user, I want the player controls to be persistently visible or easily accessible while browsing the library.
+
+Epic 5: Music Upload & Processing (Core Library Input)  
+Goal: Enable users to add music to their library.  
+(Dependency: Epic 1 \- User must be logged in)
+
+* **US2.1:** As a logged-in user, I want to select one or more audio files (MP3, FLAC, M4A, OGG) from my computer so that I can upload them.  
+* **US2.2:** As a logged-in user, I want the system to process uploaded audio files to extract basic metadata (Title, Artist, Album, Duration) so that it can be displayed in the library. *(Note: Basic extraction, full editing/review in Phase 2\)*  
+* **US2.3:** As a logged-in user, I want to see the progress of my uploads and processing so that I know the status.  
+* **US2.4:** As a logged-in user, I want uploaded and processed songs to be added to my accessible music library.  
+* **US2.5:** As a system, I want to prevent duplicate song uploads based on file content analysis so that library redundancy is minimized.
+
+
+## **Phase 2: Enhancements & Additional Features**
+
+This phase builds upon the core functionality, adding playlist management, advanced library features, personalization, and other capabilities.  
+Epic 6: Playlist Management  
+Goal: Allow users to curate and manage custom song lists.  
+(Dependency: Epic 3, Epic 4\)
+
+* **US6.1:** As a logged-in user, I want to create a new, empty playlist and give it a name.  
+* **US6.2:** As a logged-in user, I want to add one or more songs from my library to a selected playlist.  
+* **US6.3:** As a logged-in user, I want to view the contents of my saved playlists.  
+* **US6.4:** As a logged-in user, I want to remove songs from a playlist.  
+* **US6.5:** As a logged-in user, I want to reorder the songs within a playlist.  
+* **US6.6:** As a logged-in user, I want to rename my playlists.  
+* **US6.7:** As a logged-in user, I want to delete playlists I no longer need.  
+* **US6.8:** As a logged-in user, I want to load a saved playlist into the player queue for playback.
+
+Epic 7: Metadata Management & Review (Advanced)  
+Goal: Improve data quality and provide more detailed management.  
+(Dependency: Epic 2\)
+
+* **US7.1:** As a logged-in user, I want to view a dedicated list or section showing songs awaiting metadata review.  
+* **US7.2:** As a logged-in user, when reviewing a song, I want to easily edit its Title, Artist, Album, Genre, Track Number, and Year.  
+* **US7.3:** As a logged-in user, I want the system to suggest standardized Genres, but allow custom genres if configured.  
+* **US7.4:** As a logged-in user, I want to mark a song as reviewed/validated, making it fully available in the library.  
+* **US7.5:** As a logged-in user, I want to be able to edit the metadata of already reviewed songs (with appropriate permissions).  
+* **US7.6:** As a logged-in user, I want to upload and associate album artwork with specific albums or songs.  
+* **US7.7:** As a logged-in user, I want to remove associated album artwork.
+
+Epic 8: Library & Discovery (Advanced)  
+Goal: Provide richer ways to explore the music library.  
+(Dependency: Epic 3\)
+
+* **US8.1:** As a logged-in user, I want to browse my library filtered by Genre.  
+* **US8.2:** As a logged-in user, I want to view a dedicated page for a Genre, showing associated artists, albums, and songs.  
+* **US8.3:** As a logged-in user, I want to view songs sorted by "Recently Added".  
+* **US8.4:** As a logged-in user, I want to view songs sorted by "Most Played". *(Dependency: US9.3 \- Play tracking)*  
+* **US8.5:** As a logged-in user, when viewing an artist's page, I want to see a list of related artists (based on collaborations).  
+* **US8.6:** As a logged-in user, I want to see summary statistics for genres (song count, artist count, etc.).  
+* **US8.7:** As a logged-in user, I want to initiate a "Radio Mode" based on a selected genre or artist.
+
+Epic 9: User Personalization  
+Goal: Allow users to customize their experience and track preferences.  
+(Dependency: Epic 1, Epic 4\)
+
+* **US9.1:** As a logged-in user, I want to mark songs as "liked" or "disliked".  
+* **US9.2:** As a logged-in user, I want to view a list of all my liked songs.  
+* **US9.3:** As a system, I want to track song plays per user to enable features like "Most Played" and listening history.  
+* **US9.4:** As a logged-in user, I want to view my recent listening history.  
+* **US9.5:** As a logged-in user, I want my preferred volume level to be saved and restored across sessions.  
+* **US9.6:** As a logged-in user, I want to configure optional playback settings like cross-fade duration and playback speed, and have these settings saved.  
+* **US9.7:** As a logged-in user, I want to configure UI preferences (e.g., hide/show specific panels) and have these saved.
+
+Epic 10: Advanced Features  
+Goal: Implement non-core features like remote control and API access.
+
+* **US10.1:** As a logged-in user, I want to access a separate Remote Control interface (e.g., via a specific URL or QR code).  
+* **US10.2:** As a user on the Remote Control interface, I want to securely pair/log in to control my main playback session.  
+* **US10.3:** As a user on the Remote Control interface, I want to see the currently playing track information.  
+* **US10.4:** As a user on the Remote Control interface, I want basic playback controls (Play/Pause, Next, Previous, Volume).  
+* **US10.5:** (Advanced User) As a logged-in user, I want to generate, view, and delete API keys for programmatic access.  
+* **US10.6:** As a user, I want the application interface to be available in multiple languages (e.g., English, French).  
+* **US10.7:** As a user, I want to receive clear on-screen notifications for important events (e.g., upload complete, errors).
+
+Epic 11: Social Features (Invites)  
+Goal: Allow controlled user registration via invites.  
+(Dependency: Epic 1\)
+
+* **US11.1:** As an administrator, I want to grant invite credits to specific users.  
+* **US11.2:** As a logged-in user with invite credits, I want to see how many invites I have left.  
+* **US11.3:** As a logged-in user with invite credits, I want to enter an email address to send an invitation link.  
+* **US11.4:** As a recipient of an invite email, I want to click a unique link to access the registration page.  
+* **US11.5:** As an invited person, I want to register a new user account using the invite link (choosing username/password).
+
+This plan provides a structured approach. User stories within each phase can be further prioritized and refined based on development capacity and feedback. Remember to incorporate non-functional requirements (performance, security, usability) throughout the development process.

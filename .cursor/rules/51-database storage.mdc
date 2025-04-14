@@ -1,0 +1,170 @@
+---
+description: Schema and constraints of MongoDB data storage
+globs: 
+alwaysApply: false
+---
+# Constraints on the data storage.
+
+Data should be stored in MongoDB.
+
+## Songs collection
+
+Here is the schema for the songs collection
+
+```javascript
+{
+  _id: string; // Unique identifier for the song
+  album: string; // Album name
+  artist: string; // Artist name, as found in the metadata or entered by the user
+  date: number; // Year of release
+  duration: number; // Duration in seconds
+  filename: string; // Filename of the song, as found when uploaded
+  genre: string; // Genre of the song
+  hits: number; // Number of times the song was played
+  reviewed: boolean; // Whether the song has been reviewed
+  sha1: string; // SHA-1 hash of the file
+  title: string; // Title of the song
+  tokenartists: string[]; // Tokenized artist names
+  tokentitle: string; // Tokenized title of the song
+  tracknumber: number; // Track number in the album
+  ts_creation: number; // Timestamp of creation (JS timestamp)
+  user: string; // id of the user who uploaded the song
+  valid: boolean; // Whether the song is valid
+}
+```
+
+Explanation of artist, title, tokenartists and tokentitle
+The software tries to give its best guess on the title of the song and the artists in the song, given the metadata of the file. artist and title are the data found in the metadata, or entered by the user. Examples:
+
+- If artist = "Beyonce Feat. Shakira" and title = "Beautiful Liar", then tokenartists = ["Beyonce", "Shakira"] and tokentitle = "Beautiful Liar".
+- If artist = "Beyounce" and title = "Beautiful liar feat. Shakira", then tokenartists = ["Beyonce", "Shakira"] and tokentitle = "Beautiful liar".
+
+## Artists view
+
+The artists collection is a view, which means that it is automatically updated when the songs collection is updated, through the following aggregation pipeline:
+
+```javascript
+[
+  { $addFields: { _artist: "$tokenartists" } },
+  { $unwind: "$_artist" },
+  { $match: { _artist: { $exists: true, $ne: "" } } },
+  {
+    $group: {
+      _id: "$_artist",
+      songs: { $push: "$$ROOT" },
+      count: { $sum: 1 },
+      duration: { $sum: "$duration" },
+      hits: { $sum: "$hits" },
+      genres: { $addToSet: "$genre" },
+      ts_creation: { $max: "$ts_creation" },
+    },
+  },
+];
+```
+
+The artists collection has the following schema:
+
+```javascript
+{
+  _id: string; // Unique identifier for the artist
+  songs: Song[]; // Array of songs by the artist
+  count: number; // Number of songs by the artist
+  duration: number; // Total duration of all songs by the artist
+  hits: number; // Total number of hits for all songs by the artist
+  genres: string[]; // Array of genres for all songs by the artist
+  ts_creation: number; // Timestamp of creation of the most recent song (JS timestamp)
+}
+```
+
+## Albums view
+
+The albums collection is a view, which means that it is automatically updated when the songs collection is updated, through the following aggregation pipeline:
+
+```javascript
+[
+  { $match: { album: { $exists: true, $ne: "" } } },
+  {
+    $group: {
+      _id: "$album",
+      songs: { $push: "$$ROOT" },
+      count: { $sum: 1 },
+      duration: { $sum: "$duration" },
+      hits: { $sum: "$hits" },
+      genres: { $addToSet: "$genre" },
+      ts_creation: { $max: "$ts_creation" },
+    },
+  },
+];
+```
+
+The albums collection has the following schema:
+
+```javascript
+{
+  _id: string; // Unique identifier for the album
+  songs: Song[]; // Array of songs in the album
+  count: number; // Number of songs in the album
+  duration: number; // Total duration of all songs in the album
+  hits: number; // Total number of hits for all songs in the album
+  genres: string[]; // Array of genres for all songs in the album
+  ts_creation: number; // Timestamp of creation of the most recent song (JS timestamp)
+}
+```
+
+## Users collection
+
+Users are stored in a users collection.
+
+```javascript
+[
+  {
+    $lookup: {
+      from: "songs",
+      localField: "playlists",
+      foreignField: "_id",
+      as: "playlists",
+    },
+  },
+  {
+    $lookup: {
+      from: "sessions",
+      localField: "_id",
+      foreignField: "user",
+      as: "sessions",
+    },
+  },
+];
+```
+
+The users collection has the following schema:
+
+```javascript
+{
+  _id: string; // Unique identifier for the user
+  depth: number; // Depth level of the user in the hierarchy
+  login: string; // User's login name
+  parent: string; // Parent user ID
+  password: string; // Hashed password
+  playlists: {
+    _id: string; // Unique identifier for the playlist
+    name: string; // Name of the playlist
+    songs: string[]; // Array of song IDs in the playlist
+  }[]; // Array of playlists
+  sessions: {
+    _id: string; // Unique identifier for the session
+    ts_creation: number; // Timestamp of session creation (JS timestamp)
+    ts_last_usage: number; // Timestamp of last session usage (JS timestamp)
+    lang: string; // Language preference for the session
+  }[]; // Array of session objects
+  preferences: {
+    playlist: {
+      type: string; // Type of playlist (e.g., "default")
+    };
+    volume: number; // User's preferred volume level (between 0 and 1 )
+    dislikes: Record<string, boolean>; // Map of disliked song IDs
+    likes: Record<string, boolean>; // Map of liked song IDs
+    hiddenReviewHelper: boolean; // Whether the review helper is hidden
+    audioFade: boolean; // nr of seconds for the audio fade feature
+  };
+}
+```
