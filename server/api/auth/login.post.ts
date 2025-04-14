@@ -90,8 +90,9 @@ export default defineEventHandler(async (event) => {
     setCookie(event, "session", sessionId, {
       httpOnly: true,
       path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 90, // 3 months in seconds
       secure: process.env.NODE_ENV === "production",
+      sameSite: "lax", // Protect against CSRF while allowing normal navigation
     });
 
     await client.close();

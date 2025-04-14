@@ -8,4 +8,10 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+  runtimeConfig: {
+    mongodbUri: process.env.MONGODB_URI || "mongodb://localhost:27017",
+  },
+  nitro: {
+    plugins: ["~/server/plugins/mongodb.ts"],
+  },
 });
