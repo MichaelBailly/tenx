@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
 const username = ref("");
@@ -39,6 +39,17 @@ const handleSubmit = async () => {
     isLoading.value = false;
   }
 };
+
+onMounted(async () => {
+  // Check if already authenticated using our auth composable
+  const { checkAuth } = useAuth();
+  const isAuthenticated = await checkAuth();
+
+  if (isAuthenticated) {
+    // Already authenticated, redirect to app
+    router.push("/app");
+  }
+});
 </script>
 
 <template>

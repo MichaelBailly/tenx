@@ -29,6 +29,9 @@ The password is encrypted as sha1 in the datastore ("password" property). If the
 * **US1.3:** As a logged-in user, I want the application to remember my session so that I don't have to log in every time I visit.
 * **US1.4:** As a logged-in user, I am redirected to the /app page after login
 * **US1.5:** As a logged-in user, I want to be able to log out so that I can end my session securely.
+* **US1.6:** I should be redireted based on whether I am logged in
+  * going to a path starting with "/app" while not logged in -> redirect to /login
+  * going to a path starting with "/login" when already logged-in ? redirect to /app
 
 Epic 2: Music Library Browsing & Search (Core Library Interaction)  
 Goal: Allow users to view and find their music.  
