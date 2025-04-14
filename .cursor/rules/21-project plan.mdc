@@ -33,6 +33,34 @@ The password is encrypted as sha1 in the datastore ("password" property). If the
   * going to a path starting with "/app" while not logged in -> redirect to /login
   * going to a path starting with "/login" when already logged-in ? redirect to /app
 
+Technical Sprint 1: 10 issues so far
+Goal: Technical debt management, DRY, refactoring after a successful implementation of Epic 1.
+(Dependency: Epic 1 \- User must be logged in for library access)
+
+* User Type Definition Duplication
+* MongoDB Connection Duplication
+* Authentication Middleware Inconsistency
+* Session Management Duplication
+* Password Handling Duplication
+The SHA1 password hashing logic is directly in the login handler, which is not ideal for security or code organization.
+Refactoring Recommendation: Create a dedicated auth service
+* Logout Logic Duplication
+Logout functionality is duplicated in both the composable and pages/app.vue:
+composables/useAuth.ts has a logout method
+pages/app.vue has handleLogout
+Refactoring Recommendation: Use the composable consistently and remove the duplicate logout logic from pages/app.vue.
+* Debug Console Logs
+There are numerous debug console.log statements throughout the code which are not necessary for production.
+* Environment Configuration
+The MongoDB URI and other configuration values are hardcoded in multiple places.
+Refactoring Recommendation: Create a centralized config module
+* Error Handling Inconsistency
+Error handling is inconsistent across different API endpoints.
+Refactoring Recommendation: Create a standardized API response handler
+* Project Structure Improvement
+The overall project structure could be improved to better separate concerns.
+Refactoring Recommendation: Reorganize the project with a clearer structure
+
 Epic 2: Music Library Browsing & Search (Core Library Interaction)  
 Goal: Allow users to view and find their music.  
 (Dependency: Epic 1 \- User must be logged in for library access)
