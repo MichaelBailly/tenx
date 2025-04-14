@@ -1,69 +1,10 @@
 import type { H3Event } from "h3";
 import { defineEventHandler, getRequestURL } from "h3";
-import { MongoClient } from "mongodb";
-import type { MongoUser } from "~/types/mongo";
-
-// Helper function to create mongo client to avoid repetition
-const createMongoClient = () => {
-  return new MongoClient(
-    process.env.MONGODB_URI || "mongodb://localhost:27017"
-  );
-};
-
-// Check if the session is valid and return user if found
-async function validateSession(sessionId: string): Promise<MongoUser | null> {
-  let client = null;
-  try {
-    client = createMongoClient();
-    await client.connect();
-    const db = client.db("d10");
-    const users = db.collection<MongoUser>("users");
-
-    // Find user with this session
-    const user = await users.findOne(
-      { "sessions._id": sessionId },
-      { projection: { "sessions.$": 1 } }
-    );
-
-    return user;
-  } catch (error) {
-    console.error("Session validation error:", error);
-    return null;
-  } finally {
-    if (client) {
-      await client.close();
-    }
-  }
-}
-
-// Update session last usage time if needed
-async function updateSessionUsage(
-  sessionId: string,
-  userId: string
-): Promise<void> {
-  let client = null;
-  try {
-    client = createMongoClient();
-    await client.connect();
-    const db = client.db("d10");
-    const users = db.collection<MongoUser>("users");
-
-    const now = Date.now();
-    await users.updateOne(
-      {
-        _id: userId,
-        "sessions._id": sessionId,
-      },
-      { $set: { "sessions.$.ts_last_usage": now } }
-    );
-  } catch (error) {
-    console.error("Error updating session usage:", error);
-  } finally {
-    if (client) {
-      await client.close();
-    }
-  }
-}
+import {
+  clearSessionCookie,
+  setSessionCookie,
+  validateSession,
+} from "~/server/utils/auth";
 
 export default defineEventHandler(async (event: H3Event) => {
   const url = getRequestURL(event);
@@ -110,11 +51,11 @@ export default defineEventHandler(async (event: H3Event) => {
   }
 
   // Validate the session
-  const user = await validateSession(sessionCookie);
+  const { valid, user } = await validateSession(sessionCookie);
 
-  if (!user) {
+  if (!valid || !user) {
     console.log("Invalid session, clearing cookie");
-    deleteCookie(event, "session");
+    clearSessionCookie(event);
 
     if (path.startsWith("/api")) {
       return createError({
@@ -131,42 +72,14 @@ export default defineEventHandler(async (event: H3Event) => {
     return;
   }
 
-  // Check if session is expired (3 months = 7776000000 ms)
+  // Session is valid, check if cookie needs to be refreshed
+  // This happens automatically in validateSession, but we need to refresh the cookie
   const session = user.sessions[0];
   const now = Date.now();
 
-  if (now - session.ts_creation > 7776000000) {
-    console.log("Session expired, clearing cookie");
-    deleteCookie(event, "session");
-
-    if (path.startsWith("/api")) {
-      return createError({
-        statusCode: 401,
-        statusMessage: "Session expired",
-      });
-    }
-
-    // Just set authentication state to false - client middleware will handle redirect
-    event.context.auth = {
-      authenticated: false,
-      userId: null,
-    };
-    return;
-  }
-
-  // Update session last usage time if it's been more than an hour
   if (now - session.ts_last_usage > 3600000) {
-    console.log("Updating session last usage time");
-    await updateSessionUsage(sessionCookie, user._id);
-
-    // Refresh the cookie expiration
-    setCookie(event, "session", sessionCookie, {
-      httpOnly: true,
-      path: "/",
-      maxAge: 60 * 60 * 24 * 90, // 3 months in seconds
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-    });
+    console.log("Refreshing session cookie");
+    setSessionCookie(event, sessionCookie);
   }
 
   // At this point, we know the session is valid. Set authenticated user details in context

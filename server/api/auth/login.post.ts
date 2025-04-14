@@ -1,6 +1,4 @@
-import { createHash } from "crypto";
-import { MongoClient } from "mongodb";
-import type { MongoUser } from "~/types/mongo";
+import { authenticateUser, createSession } from "~/server/utils/auth";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -14,22 +12,8 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    // Connect to MongoDB
-    const client = new MongoClient(
-      process.env.MONGODB_URI || "mongodb://localhost:27017"
-    );
-    await client.connect();
-    const db = client.db("d10");
-    const users = db.collection<MongoUser>("users");
-
-    // Hash the password (SHA1)
-    const hashedPassword = createHash("sha1").update(password).digest("hex");
-
-    // Find user
-    const user = await users.findOne({
-      login: username,
-      password: hashedPassword,
-    });
+    // Authenticate user
+    const user = await authenticateUser(username, password);
 
     if (!user) {
       throw createError({
@@ -38,36 +22,8 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    // Create a new session
-    const sessionId = createHash("sha256")
-      .update(Math.random().toString())
-      .digest("hex");
-    const now = Date.now();
-
-    await users.updateOne(
-      { _id: user._id },
-      {
-        $push: {
-          sessions: {
-            _id: sessionId,
-            ts_creation: now,
-            ts_last_usage: now,
-            lang: "en", // Default language
-          },
-        },
-      }
-    );
-
-    // Set session cookie
-    setCookie(event, "session", sessionId, {
-      httpOnly: true,
-      path: "/",
-      maxAge: 60 * 60 * 24 * 90, // 3 months in seconds
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax", // Protect against CSRF while allowing normal navigation
-    });
-
-    await client.close();
+    // Create a new session and set cookie
+    await createSession(user._id, event);
 
     // Return success without sensitive data
     return {
