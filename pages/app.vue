@@ -1,10 +1,11 @@
 <script setup lang="ts">
+// Use the auth composable
+const { logout, user } = useAuth();
+
 // Handle logout functionality
 const handleLogout = async () => {
   try {
-    await $fetch("/api/auth/logout", { method: "POST" });
-    // Redirect to login page after successful logout
-    navigateTo("/login");
+    await logout();
   } catch (error) {
     console.error("Logout error:", error);
   }
@@ -21,6 +22,9 @@ const handleLogout = async () => {
             <h1 class="text-2xl font-bold text-gray-900">tenX</h1>
           </div>
           <div class="flex items-center">
+            <span v-if="user?.username" class="text-gray-600 mr-4">
+              Welcome, {{ user.username }}
+            </span>
             <button
               @click="handleLogout"
               @keydown.enter="handleLogout"

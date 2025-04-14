@@ -6,11 +6,13 @@ type AuthState = {
   authenticated: boolean;
   user: ClientUser | null;
   loading: boolean;
+  error: string | null;
 };
 
 type AuthResponse = {
   authenticated: boolean;
   userId: string | null;
+  username: string | null;
 };
 
 // Create a global store for auth state
@@ -18,21 +20,36 @@ const authState = ref<AuthState>({
   authenticated: false,
   user: null,
   loading: false,
+  error: null,
 });
 
 export function useAuth() {
   // Check authentication status
   const checkAuth = async () => {
     authState.value.loading = true;
-    try {
-      const { data } = await useFetch<AuthResponse>("/api/auth/status");
-      console.log("useAuth: Auth check result:", data.value);
+    authState.value.error = null;
 
-      if (data.value?.authenticated && data.value.userId) {
+    try {
+      // Use direct fetch for better error handling
+      const response = await fetch("/api/auth/status");
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to check auth status: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const data = (await response.json()) as AuthResponse;
+
+      if (process.env.NODE_ENV !== "production") {
+        console.log("useAuth: Auth check result:", data);
+      }
+
+      if (data.authenticated && data.userId) {
         authState.value.authenticated = true;
         authState.value.user = {
-          userId: data.value.userId,
-          username: "", // We don't receive username from the status endpoint yet
+          userId: data.userId,
+          username: data.username || "",
         };
       } else {
         authState.value.authenticated = false;
@@ -42,6 +59,10 @@ export function useAuth() {
       console.error("useAuth: Auth check error:", error);
       authState.value.authenticated = false;
       authState.value.user = null;
+      authState.value.error =
+        error instanceof Error
+          ? error.message
+          : "Failed to check authentication";
     } finally {
       authState.value.loading = false;
     }
@@ -52,7 +73,14 @@ export function useAuth() {
   // Handle logout
   const logout = async () => {
     try {
-      await $fetch("/api/auth/logout", { method: "POST" });
+      const response = await fetch("/api/auth/logout", { method: "POST" });
+
+      if (!response.ok) {
+        throw new Error(
+          `Logout failed: ${response.status} ${response.statusText}`
+        );
+      }
+
       authState.value.authenticated = false;
       authState.value.user = null;
 
@@ -60,6 +88,8 @@ export function useAuth() {
       return navigateTo("/login");
     } catch (error) {
       console.error("useAuth: Logout error:", error);
+      authState.value.error =
+        error instanceof Error ? error.message : "Logout failed";
     }
   };
 
@@ -71,6 +101,7 @@ export function useAuth() {
     isAuthenticated: computed(() => authState.value.authenticated),
     user: computed(() => authState.value.user),
     isLoading: computed(() => authState.value.loading),
+    error: computed(() => authState.value.error),
 
     // Methods
     checkAuth,

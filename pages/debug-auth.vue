@@ -5,22 +5,33 @@ const authState = ref({
   loading: true,
   authenticated: false,
   userId: null,
+  username: null,
   error: null,
 });
 
 async function checkAuth() {
   authState.value.loading = true;
-  try {
-    const { data, error } = await useFetch("/api/auth/status");
+  authState.value.error = null;
 
-    if (error.value) {
-      authState.value.error = error.value.message || "Unknown error";
-    } else {
-      authState.value.authenticated = !!data.value?.authenticated;
-      authState.value.userId = data.value?.userId;
+  try {
+    // Use fetch with error handling
+    const response = await fetch("/api/auth/status");
+
+    if (!response.ok) {
+      authState.value.error = `Error: ${response.status} ${response.statusText}`;
+      authState.value.authenticated = false;
+      return;
     }
+
+    const data = await response.json();
+
+    authState.value.authenticated = !!data.authenticated;
+    authState.value.userId = data.userId || null;
+    authState.value.username = data.username || null;
   } catch (err) {
-    authState.value.error = err.message || "Error checking auth";
+    console.error("Error checking auth:", err);
+    authState.value.error = err.message || "Error checking authentication";
+    authState.value.authenticated = false;
   } finally {
     authState.value.loading = false;
   }
@@ -39,8 +50,14 @@ onMounted(() => {
       Loading authentication state...
     </div>
 
-    <div v-else-if="authState.error" class="text-red-600">
-      Error: {{ authState.error }}
+    <div v-else-if="authState.error" class="text-red-600 mb-4">
+      <p>{{ authState.error }}</p>
+      <button
+        @click="checkAuth"
+        class="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        Try Again
+      </button>
     </div>
 
     <div v-else class="bg-white shadow-md rounded p-4">
@@ -54,7 +71,12 @@ onMounted(() => {
       </div>
 
       <div v-if="authState.authenticated" class="mb-4">
-        <span class="font-bold">User ID:</span> {{ authState.userId }}
+        <div>
+          <span class="font-bold">User ID:</span> {{ authState.userId }}
+        </div>
+        <div v-if="authState.username">
+          <span class="font-bold">Username:</span> {{ authState.username }}
+        </div>
       </div>
 
       <div class="mt-4 flex gap-2">
