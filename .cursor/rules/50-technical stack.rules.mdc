@@ -6,7 +6,7 @@ alwaysApply: true
 # Technical Stack
 
 - TypeScript and Vue js frontend with Tailwind CSS.
-- Nuxt.js as application server, used for server-side rendering, static site generation, and many other things. We use bun Javascript engine.
+- Nuxt.js as application server, used for server-side rendering, static site generation, and many other things.
 - MongoDB as the database. Using the mongodb driver, no ORM or ODM.
 
 - Focus on easy and readability code, over being performant.
