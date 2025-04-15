@@ -5,8 +5,8 @@ let client: MongoClient;
 export default defineNitroPlugin(async (nitroApp) => {
   const config = useRuntimeConfig();
 
-  // Create MongoDB client
-  client = new MongoClient(config.mongodbUri);
+  // Create MongoDB client with full options from config
+  client = new MongoClient(config.mongodbUri, config.mongodbOptions);
 
   try {
     // Connect to MongoDB
