@@ -65,42 +65,42 @@ Epic 2: Music Library Browsing & Search (Core Library Interaction)
 Goal: Allow users to view and find their music.  
 (Dependency: Epic 1 \- User must be logged in for library access)
 
-* **US3.1:** As a logged-in user, I want to view a list of all my accessible songs, displaying basic information (Title, Artist, Album, Duration).  
-* **US3.2:** As a logged-in user, I want to browse my library filtered by Artist so that I can see all songs by a specific artist.  
-* **US3.3:** As a logged-in user, I want to browse my library filtered by Album so that I can see all songs on a specific album.  
-* **US3.4:** As a logged-in user, I want to perform a basic search by keyword (matching Title, Artist, or Album) so that I can quickly find specific music.  
-* **US3.5:** As a logged-in user, I want library views (all songs, artist, album, search results) to be sortable (e.g., by Title, Artist, Album).
+* **US2.1:** As a logged-in user, I want to view a list of all my accessible songs, displaying basic information (Title, Artist, Album, Duration).  
+* **US2.2:** As a logged-in user, I want to browse my library filtered by Artist so that I can see all songs by a specific artist.  
+* **US2.3:** As a logged-in user, I want to browse my library filtered by Album so that I can see all songs on a specific album.  
+* **US2.4:** As a logged-in user, I want to perform a basic search by keyword (matching Title, Artist, or Album) so that I can quickly find specific music.  
+* **US2.5:** As a logged-in user, I want library views (all songs, artist, album, search results) to be sortable (e.g., by Title, Artist, Album).
 
 Epic 3: Audio Player & Playback Controls (Core Player)  
 Goal: Enable users to listen to their music.  
 (Dependency: Epic 3 \- User needs to select music from the library)
 
-* **US4.1:** As a logged-in user, I want to select a song from the library or search results to start playback.  
-* **US4.2:** As a logged-in user, I want standard playback controls (Play, Pause) for the current song.  
-* **US4.3:** As a logged-in user, I want controls to skip to the Next or Previous track in the current context (e.g., album view, playlist view \- basic queue initially).  
-* **US4.4:** As a logged-in user, I want to see the currently playing track's information (Title, Artist, Album).  
-* **US4.5:** As a logged-in user, I want to see a progress bar indicating the current position within the song and the song's total duration.  
-* **US4.6:** As a logged-in user, I want to be able to click/drag the progress bar to seek to a specific point in the song.  
-* **US4.7:** As a logged-in user, I want to control the playback volume.  
-* **US4.8:** As a logged-in user, I want the player to automatically play the next song in the current context (e.g., album) when the current song finishes.
+* **US3.1:** As a logged-in user, I want to select a song from the library or search results to start playback.  
+* **US3.2:** As a logged-in user, I want standard playback controls (Play, Pause) for the current song.  
+* **US3.3:** As a logged-in user, I want controls to skip to the Next or Previous track in the current context (e.g., album view, playlist view \- basic queue initially).  
+* **US3.4:** As a logged-in user, I want to see the currently playing track's information (Title, Artist, Album).  
+* **US3.5:** As a logged-in user, I want to see a progress bar indicating the current position within the song and the song's total duration.  
+* **US3.6:** As a logged-in user, I want to be able to click/drag the progress bar to seek to a specific point in the song.  
+* **US3.7:** As a logged-in user, I want to control the playback volume.  
+* **US3.8:** As a logged-in user, I want the player to automatically play the next song in the current context (e.g., album) when the current song finishes.
 
 Epic 4: UI/UX Foundation & Shell  
 Goal: Establish the basic layout and navigation structure.  
 (Dependency: Parallel development with other Phase 1 Epics)
 
-* **US5.1:** As a user, I want a consistent application shell (header, main content area, player bar) for navigation and interaction.  
-* **US5.2:** As a logged-in user, I want clear navigation links to access different library views (All Songs, Artists, Albums, Search).  
-* **US5.3:** As a logged-in user, I want the player controls to be persistently visible or easily accessible while browsing the library.
+* **US4.1:** As a user, I want a consistent application shell (header, main content area, player bar) for navigation and interaction.  
+* **US4.2:** As a logged-in user, I want clear navigation links to access different library views (All Songs, Artists, Albums, Search).  
+* **US4.3:** As a logged-in user, I want the player controls to be persistently visible or easily accessible while browsing the library.
 
 Epic 5: Music Upload & Processing (Core Library Input)  
 Goal: Enable users to add music to their library.  
 (Dependency: Epic 1 \- User must be logged in)
 
-* **US2.1:** As a logged-in user, I want to select one or more audio files (MP3, FLAC, M4A, OGG) from my computer so that I can upload them.  
-* **US2.2:** As a logged-in user, I want the system to process uploaded audio files to extract basic metadata (Title, Artist, Album, Duration) so that it can be displayed in the library. *(Note: Basic extraction, full editing/review in Phase 2\)*  
-* **US2.3:** As a logged-in user, I want to see the progress of my uploads and processing so that I know the status.  
-* **US2.4:** As a logged-in user, I want uploaded and processed songs to be added to my accessible music library.  
-* **US2.5:** As a system, I want to prevent duplicate song uploads based on file content analysis so that library redundancy is minimized.
+* **US5.1:** As a logged-in user, I want to select one or more audio files (MP3, FLAC, M4A, OGG) from my computer so that I can upload them.  
+* **US5.2:** As a logged-in user, I want the system to process uploaded audio files to extract basic metadata (Title, Artist, Album, Duration) so that it can be displayed in the library. *(Note: Basic extraction, full editing/review in Phase 2\)*  
+* **US5.3:** As a logged-in user, I want to see the progress of my uploads and processing so that I know the status.  
+* **US5.4:** As a logged-in user, I want uploaded and processed songs to be added to my accessible music library.  
+* **US5.5:** As a system, I want to prevent duplicate song uploads based on file content analysis so that library redundancy is minimized.
 
 
 ## **Phase 2: Enhancements & Additional Features**
