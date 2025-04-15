@@ -53,3 +53,33 @@ export type ClientUser = {
   username: string;
   // Other non-sensitive fields that might be needed in the client
 };
+
+// MongoDB Song document interface
+export type MongoSong = {
+  _id: string;
+  album?: string;
+  artist?: string;
+  date?: number;
+  duration?: number;
+  filename?: string;
+  genre?: string;
+  hits?: number;
+  reviewed?: boolean;
+  sha1?: string;
+  title?: string;
+  tokenartists?: string[];
+  tokentitle?: string;
+  tracknumber?: number;
+  images?: {
+    filename?: string;
+    sha1: string;
+    alternatives: Record<string, { width: number; height: number }>;
+  }[];
+  sourceFile?: {
+    type: string;
+    extension: string;
+  };
+  ts_creation?: number;
+  user?: string;
+  valid?: boolean;
+};

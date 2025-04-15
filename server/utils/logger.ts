@@ -1,9 +1,9 @@
 import { useRuntimeConfig } from "#imports";
-import pino from "pino";
+import { pino } from "pino";
 
 // Get environment from runtime config
 const config = useRuntimeConfig();
-const isDev = config.public.environment !== "production";
+const isDev = config.public.nodeEnv !== "production";
 
 // Configure the logger
 const logger = pino({
@@ -19,16 +19,17 @@ const logger = pino({
     : undefined,
   // Base properties that will be included in all logs
   base: {
-    app: "tenx2",
-    env: config.public.environment,
+    app: "tenx",
+    env: config.public.nodeEnv,
   },
 });
 
 // Create namespaced loggers for different parts of the application
 export const serverLogger = logger.child({ context: "server" });
-export const authLogger = logger.child({ context: "auth" });
+export const authLogger = logger.child({ module: "auth" });
 export const dbLogger = logger.child({ context: "database" });
-export const apiLogger = logger.child({ context: "api" });
+export const apiLogger = logger.child({ module: "api" });
+export const songsApiLogger = logger.child({ module: "api:songs" });
 
 // Default export for general usage
 export default logger;

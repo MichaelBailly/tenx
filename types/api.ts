@@ -1,4 +1,3 @@
-
 /**
  * Song, sent from various API endpoints
  */
@@ -20,4 +19,15 @@ export type ApiSong = {
   ts_creation: number; // Timestamp of creation (JS timestamp)
   canEdit: boolean; // true if the user can edit the song
   valid: boolean; // Whether the song is valid
+  images?: {
+    // Optional images associated with the song
+    filename?: string;
+    sha1: string;
+    alternatives: Record<string, { width: number; height: number }>;
+  }[];
+  sourceFile?: {
+    // Optional source file metadata
+    type: string;
+    extension: string;
+  };
 };
