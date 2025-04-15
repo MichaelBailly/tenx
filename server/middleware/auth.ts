@@ -1,3 +1,4 @@
+// server/middleware/auth.ts
 import type { H3Event } from "h3";
 import { defineEventHandler, getRequestURL, sendRedirect } from "h3";
 import { SessionService } from "~/server/services/SessionService";
