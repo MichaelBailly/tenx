@@ -1,15 +1,6 @@
 <script setup lang="ts">
 // Use the auth composable
 const { logout, user } = useAuth();
-
-// Handle logout functionality
-const handleLogout = async () => {
-  try {
-    await logout();
-  } catch (error) {
-    console.error("Logout error:", error);
-  }
-};
 </script>
 
 <template>
@@ -26,8 +17,8 @@ const handleLogout = async () => {
               Welcome, {{ user.username }}
             </span>
             <button
-              @click="handleLogout"
-              @keydown.enter="handleLogout"
+              @click="logout"
+              @keydown.enter="logout"
               class="ml-4 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               aria-label="Log out"
               tabindex="0"
