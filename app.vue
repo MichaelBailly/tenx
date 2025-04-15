@@ -1,5 +1,9 @@
 <script setup>
 import { onMounted } from "vue";
+import { useAppLogger } from "~/composables/useLogger";
+
+// Initialize logger
+const logger = useAppLogger();
 
 // Check authentication status on application load
 onMounted(async () => {
@@ -7,13 +11,13 @@ onMounted(async () => {
   try {
     const { checkAuth, error } = useAuth();
     const isAuthenticated = await checkAuth();
-    console.log("Initial auth check complete, authenticated:", isAuthenticated);
+    logger.debug({ isAuthenticated }, "Initial auth check complete");
 
     if (error.value) {
-      console.error("Auth check error:", error.value);
+      logger.error({ err: error.value }, "Auth check error");
     }
   } catch (error) {
-    console.error("Error checking auth status:", error);
+    logger.error({ err: error }, "Error checking auth status");
   }
 });
 </script>

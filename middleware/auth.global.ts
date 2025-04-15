@@ -2,9 +2,13 @@
  * Global client-side auth middleware
  * This works with the server middleware to handle redirects based on auth status
  */
+import { useAuthLogger } from "~/composables/useLogger";
 import { Config } from "~/server/utils/config";
 
 export default defineNuxtRouteMiddleware(async (to) => {
+  // Initialize logger
+  const logger = useAuthLogger();
+
   // Check if the route needs protection
   const isProtectedRoute = Config.routes.protected.some((prefix) =>
     to.path.startsWith(prefix)
@@ -25,19 +29,22 @@ export default defineNuxtRouteMiddleware(async (to) => {
     const { checkAuth } = useAuth();
     const isAuthenticated = await checkAuth();
 
-    console.log("Auth middleware check result:", isAuthenticated);
+    logger.debug(
+      { isAuthenticated, path: to.path },
+      "Auth middleware check result"
+    );
 
     if (!isAuthenticated) {
-      console.log("Auth middleware: Not authenticated, redirecting to login");
+      logger.debug("Auth middleware: Not authenticated, redirecting to login");
       return navigateTo("/login");
     }
 
-    console.log(
-      "Auth middleware: User is authenticated, allowing access to:",
-      to.path
+    logger.debug(
+      { path: to.path },
+      "Auth middleware: User is authenticated, allowing access"
     );
   } catch (error) {
-    console.error("Auth middleware error:", error);
+    logger.error({ err: error, path: to.path }, "Auth middleware error");
     return navigateTo("/login");
   }
 });

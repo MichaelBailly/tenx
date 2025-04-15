@@ -2,7 +2,9 @@
 import type { H3Event } from "h3";
 import { defineEventHandler, getRequestURL, sendRedirect } from "h3";
 import { SessionService } from "~/server/services/SessionService";
+import { createErrorResponse, sendApiResponse } from "~/server/utils/api";
 import { Config } from "~/server/utils/config";
+import { authLogger } from "~/server/utils/logger";
 
 export default defineEventHandler(async (event: H3Event) => {
   const url = getRequestURL(event);
@@ -12,8 +14,11 @@ export default defineEventHandler(async (event: H3Event) => {
 
   // For debugging
   if (process.env.NODE_ENV !== "production") {
-    console.log(`Auth middleware triggered for path: ${path}`);
-    console.log(`Session cookie exists: ${!!sessionCookie}`);
+    authLogger.debug({ path }, `Auth middleware triggered for path: ${path}`);
+    authLogger.debug(
+      { hasCookie: !!sessionCookie },
+      `Session cookie exists: ${!!sessionCookie}`
+    );
   }
 
   // Add auth information to event context
@@ -28,7 +33,7 @@ export default defineEventHandler(async (event: H3Event) => {
     if (!sessionCookie) {
       // Just set auth context to false for status endpoint
       if (process.env.NODE_ENV !== "production") {
-        console.log("Auth status endpoint called without session");
+        authLogger.debug("Auth status endpoint called without session");
       }
       return;
     }
@@ -43,10 +48,13 @@ export default defineEventHandler(async (event: H3Event) => {
       };
 
       if (process.env.NODE_ENV !== "production") {
-        console.log("Auth status: authenticated user", user._id);
+        authLogger.debug(
+          { userId: user._id },
+          "Auth status: authenticated user"
+        );
       }
     } else if (process.env.NODE_ENV !== "production") {
-      console.log("Auth status: invalid session");
+      authLogger.debug("Auth status: invalid session");
     }
 
     return;
@@ -64,7 +72,7 @@ export default defineEventHandler(async (event: H3Event) => {
   // Skip auth check for non-protected or public API routes
   if (isPublicApiRoute || !isProtectedRoute) {
     if (process.env.NODE_ENV !== "production") {
-      console.log("Skipping auth check for non-protected route");
+      authLogger.debug({ path }, "Skipping auth check for non-protected route");
     }
     return;
   }
@@ -72,20 +80,20 @@ export default defineEventHandler(async (event: H3Event) => {
   // Handle protected paths when not authenticated
   if (!sessionCookie) {
     if (process.env.NODE_ENV !== "production") {
-      console.log("No session cookie found for protected path");
+      authLogger.debug({ path }, "No session cookie found for protected path");
     }
 
     // For API routes, return 401 error
     if (path.startsWith("/api")) {
-      return createError({
-        statusCode: 401,
-        statusMessage: "Unauthorized",
-      });
+      return sendApiResponse(
+        event,
+        createErrorResponse("Authentication required", "UNAUTHORIZED", 401)
+      );
     }
 
     // For non-API routes, redirect to login
     if (process.env.NODE_ENV !== "production") {
-      console.log("Non-API protected route, redirecting to login");
+      authLogger.debug("Non-API protected route, redirecting to login");
     }
 
     return sendRedirect(event, "/login");
@@ -96,20 +104,20 @@ export default defineEventHandler(async (event: H3Event) => {
 
   if (!valid || !user) {
     if (process.env.NODE_ENV !== "production") {
-      console.log("Invalid session, clearing cookie");
+      authLogger.debug("Invalid session, clearing cookie");
     }
     sessionService.clearSessionCookie(event);
 
     if (path.startsWith("/api")) {
-      return createError({
-        statusCode: 401,
-        statusMessage: "Unauthorized",
-      });
+      return sendApiResponse(
+        event,
+        createErrorResponse("Invalid session", "INVALID_SESSION", 401)
+      );
     }
 
     // For non-API routes, redirect to login
     if (process.env.NODE_ENV !== "production") {
-      console.log("Invalid session, redirecting to login");
+      authLogger.debug("Invalid session, redirecting to login");
     }
 
     return sendRedirect(event, "/login");
@@ -122,7 +130,7 @@ export default defineEventHandler(async (event: H3Event) => {
 
   if (now - session.ts_last_usage > Config.session.expiry.refreshInterval) {
     if (process.env.NODE_ENV !== "production") {
-      console.log("Refreshing session cookie");
+      authLogger.debug("Refreshing session cookie");
     }
     sessionService.setSessionCookie(event, sessionCookie);
   }
@@ -135,6 +143,9 @@ export default defineEventHandler(async (event: H3Event) => {
   };
 
   if (process.env.NODE_ENV !== "production") {
-    console.log("Authentication successful for user:", user._id);
+    authLogger.debug(
+      { userId: user._id },
+      "Authentication successful for user"
+    );
   }
 });

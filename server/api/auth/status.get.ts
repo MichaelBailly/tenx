@@ -1,5 +1,7 @@
-import { defineEventHandler, setResponseStatus } from "h3";
+import { defineEventHandler } from "h3";
 import { SessionService } from "~/server/services/SessionService";
+import { createSuccessResponse, sendApiResponse } from "~/server/utils/api";
+import { authLogger } from "~/server/utils/logger";
 
 export default defineEventHandler((event) => {
   // Return authentication status from the event context
@@ -10,28 +12,34 @@ export default defineEventHandler((event) => {
     username: null,
   };
 
-  // Important: Always set 200 OK for the status endpoint even if not authenticated
-  // This prevents client-side errors when checking auth status
-  setResponseStatus(event, 200);
-
   // Add better debug info if not in production
   if (process.env.NODE_ENV !== "production") {
     const sessionService = SessionService.getInstance();
     const sessionCookie = sessionService.getSessionIdFromCookie(event);
 
-    console.log(`Auth status API called for path: ${event.path}`);
-    console.log(`Session cookie exists: ${!!sessionCookie}`);
-    console.log(`Auth context: ${JSON.stringify(event.context.auth)}`);
-    console.log("Status response:", {
+    // Log auth status details
+    authLogger.debug(
+      {
+        path: event.path,
+        hasCookie: !!sessionCookie,
+        authContext: event.context.auth,
+        response: {
+          authenticated: !!auth.authenticated,
+          userId: auth.userId || null,
+          username: auth.username || null,
+        },
+      },
+      "Auth status API called"
+    );
+  }
+
+  // Always return 200 OK with standardized response format
+  return sendApiResponse(
+    event,
+    createSuccessResponse({
       authenticated: !!auth.authenticated,
       userId: auth.userId || null,
       username: auth.username || null,
-    });
-  }
-
-  return {
-    authenticated: !!auth.authenticated,
-    userId: auth.userId || null,
-    username: auth.username || null,
-  };
+    })
+  );
 });

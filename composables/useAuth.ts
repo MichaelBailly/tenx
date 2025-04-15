@@ -1,4 +1,5 @@
 import { computed, ref } from "vue";
+import { useAuthLogger } from "~/composables/useLogger";
 import type { ClientUser } from "~/types/mongo";
 
 // Types
@@ -24,6 +25,8 @@ const authState = ref<AuthState>({
 });
 
 export function useAuth() {
+  const logger = useAuthLogger();
+
   // Check authentication status
   const checkAuth = async () => {
     authState.value.loading = true;
@@ -42,7 +45,7 @@ export function useAuth() {
       const data = (await response.json()) as AuthResponse;
 
       if (process.env.NODE_ENV !== "production") {
-        console.log("useAuth: Auth check result:", data);
+        logger.debug({ data }, "useAuth: Auth check result");
       }
 
       if (data.authenticated && data.userId) {
@@ -56,7 +59,7 @@ export function useAuth() {
         authState.value.user = null;
       }
     } catch (error) {
-      console.error("useAuth: Auth check error:", error);
+      logger.error({ err: error }, "useAuth: Auth check error");
       authState.value.authenticated = false;
       authState.value.user = null;
       authState.value.error =
@@ -87,7 +90,7 @@ export function useAuth() {
       // Navigate to login
       return navigateTo("/login");
     } catch (error) {
-      console.error("useAuth: Logout error:", error);
+      logger.error({ err: error }, "useAuth: Logout error");
       authState.value.error =
         error instanceof Error ? error.message : "Logout failed";
     }

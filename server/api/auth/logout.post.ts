@@ -1,4 +1,10 @@
 import { AuthService } from "~/server/services/AuthService";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  handleApiError,
+  sendApiResponse,
+} from "~/server/utils/api";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -6,15 +12,21 @@ export default defineEventHandler(async (event) => {
     const result = await authService.logoutUser(event);
 
     if (!result.success) {
-      return {
-        success: false,
-        error: result.error || "An error occurred during logout",
-      };
+      return sendApiResponse(
+        event,
+        createErrorResponse(
+          result.error || "An error occurred during logout",
+          "LOGOUT_FAILED",
+          400
+        )
+      );
     }
 
-    return { success: true };
+    return sendApiResponse(event, createSuccessResponse());
   } catch (error) {
-    console.error("Logout error:", error);
-    return { success: false, error: "An error occurred during logout" };
+    return sendApiResponse(
+      event,
+      handleApiError(error, "An error occurred during logout")
+    );
   }
 });

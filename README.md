@@ -24,3 +24,35 @@ Key configuration options:
 - `PORT`: Application server port
 
 See `.env.example` for a complete list of available configuration options.
+
+## API Response Format
+
+All API endpoints in tenX follow a standardized response format:
+
+### Success Response
+
+```json
+{
+  "success": true,
+  "data": { ... } // Optional response data
+}
+```
+
+### Error Response
+
+```json
+{
+  "success": false,
+  "error": "Human readable error message",
+  "code": "ERROR_CODE" // Optional error code
+}
+```
+
+HTTP status codes are also used appropriately:
+
+- 200: Success
+- 400: Bad request
+- 401: Unauthorized
+- 403: Forbidden
+- 404: Not found
+- 500: Server error

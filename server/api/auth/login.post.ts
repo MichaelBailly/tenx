@@ -1,4 +1,10 @@
 import { AuthService } from "~/server/services/AuthService";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  handleApiError,
+  sendApiResponse,
+} from "~/server/utils/api";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -6,33 +12,37 @@ export default defineEventHandler(async (event) => {
     const { username, password } = body;
 
     if (!username || !password) {
-      throw createError({
-        statusCode: 400,
-        message: "Username and password are required",
-      });
+      return sendApiResponse(
+        event,
+        createErrorResponse(
+          "Username and password are required",
+          "MISSING_CREDENTIALS",
+          400
+        )
+      );
     }
 
     const authService = AuthService.getInstance();
     const result = await authService.loginUser(username, password, event);
 
     if (!result.success) {
-      throw createError({
-        statusCode: 401,
-        message: result.error || "Invalid credentials",
-      });
+      return sendApiResponse(
+        event,
+        createErrorResponse(
+          result.error || "Invalid credentials",
+          "INVALID_CREDENTIALS",
+          401
+        )
+      );
     }
 
     // Return success
-    return { success: true };
-  } catch (error: unknown) {
-    // Don't expose internal errors to client
-    if (error instanceof Error && !("statusCode" in error)) {
-      console.error("Login error:", error);
-      throw createError({
-        statusCode: 500,
-        message: "An error occurred during login",
-      });
-    }
-    throw error;
+    return sendApiResponse(event, createSuccessResponse());
+  } catch (error) {
+    // Handle and standardize error response
+    return sendApiResponse(
+      event,
+      handleApiError(error, "An error occurred during login")
+    );
   }
 });
