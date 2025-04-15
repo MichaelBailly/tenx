@@ -1,3 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
 # Coding workflow preferences
 
 - Focus on the areas of code relevant du the task

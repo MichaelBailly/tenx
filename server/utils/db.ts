@@ -11,6 +11,7 @@ export class DatabaseService {
   private client: MongoClient;
   private uri: string;
   private dbName: string;
+  private isConnected: boolean = false;
 
   /**
    * Private constructor to enforce singleton pattern
@@ -36,7 +37,11 @@ export class DatabaseService {
    */
   public async connect(): Promise<MongoClient> {
     try {
-      await this.client.connect();
+      if (!this.isConnected) {
+        await this.client.connect();
+        this.isConnected = true;
+        console.log("Connected to MongoDB");
+      }
       return this.client;
     } catch (error) {
       console.error("MongoDB connection error:", error);
@@ -58,27 +63,13 @@ export class DatabaseService {
    */
   public async close(): Promise<void> {
     try {
-      await this.client.close();
+      if (this.isConnected) {
+        await this.client.close();
+        this.isConnected = false;
+        console.log("Disconnected from MongoDB");
+      }
     } catch (error) {
       console.error("MongoDB close connection error:", error);
-    }
-  }
-
-  /**
-   * Run operations with automatic connection management
-   * @param operation Function that performs database operations
-   * @returns Result of the operation
-   */
-  public async withConnection<T>(operation: () => Promise<T>): Promise<T> {
-    let connected = false;
-    try {
-      await this.connect();
-      connected = true;
-      return await operation();
-    } finally {
-      if (connected) {
-        await this.close();
-      }
     }
   }
 
@@ -88,13 +79,12 @@ export class DatabaseService {
    * Find a user by session ID
    */
   public async findUserBySession(sessionId: string): Promise<MongoUser | null> {
-    return this.withConnection(async () => {
-      const users = this.getCollection<MongoUser>("users");
-      return users.findOne(
-        { "sessions._id": sessionId },
-        { projection: { "sessions.$": 1, _id: 1, login: 1 } }
-      );
-    });
+    await this.connect();
+    const users = this.getCollection<MongoUser>("users");
+    return users.findOne(
+      { "sessions._id": sessionId },
+      { projection: { "sessions.$": 1, _id: 1, login: 1 } }
+    );
   }
 
   /**
@@ -104,12 +94,11 @@ export class DatabaseService {
     login: string,
     hashedPassword: string
   ): Promise<MongoUser | null> {
-    return this.withConnection(async () => {
-      const users = this.getCollection<MongoUser>("users");
-      return users.findOne({
-        login,
-        password: hashedPassword,
-      });
+    await this.connect();
+    const users = this.getCollection<MongoUser>("users");
+    return users.findOne({
+      login,
+      password: hashedPassword,
     });
   }
 
@@ -125,10 +114,9 @@ export class DatabaseService {
       lang: string;
     }
   ): Promise<void> {
-    return this.withConnection(async () => {
-      const users = this.getCollection<MongoUser>("users");
-      await users.updateOne({ _id: userId }, { $push: { sessions: session } });
-    });
+    await this.connect();
+    const users = this.getCollection<MongoUser>("users");
+    await users.updateOne({ _id: userId }, { $push: { sessions: session } });
   }
 
   /**
@@ -138,26 +126,24 @@ export class DatabaseService {
     sessionId: string,
     userId: string
   ): Promise<void> {
-    return this.withConnection(async () => {
-      const users = this.getCollection<MongoUser>("users");
-      const now = Date.now();
-      await users.updateOne(
-        { _id: userId, "sessions._id": sessionId },
-        { $set: { "sessions.$.ts_last_usage": now } }
-      );
-    });
+    await this.connect();
+    const users = this.getCollection<MongoUser>("users");
+    const now = Date.now();
+    await users.updateOne(
+      { _id: userId, "sessions._id": sessionId },
+      { $set: { "sessions.$.ts_last_usage": now } }
+    );
   }
 
   /**
    * Remove a session from a user
    */
   public async removeSession(sessionId: string): Promise<void> {
-    return this.withConnection(async () => {
-      const users = this.getCollection<MongoUser>("users");
-      await users.updateOne(
-        { "sessions._id": sessionId },
-        { $pull: { sessions: { _id: sessionId } } }
-      );
-    });
+    await this.connect();
+    const users = this.getCollection<MongoUser>("users");
+    await users.updateOne(
+      { "sessions._id": sessionId },
+      { $pull: { sessions: { _id: sessionId } } }
+    );
   }
 }

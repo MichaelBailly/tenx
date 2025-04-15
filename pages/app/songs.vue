@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
+import { computed } from "vue";
 import Pagination from "~/components/ui/Pagination.vue";
 import { useSongs } from "~/composables/useSongs";
 
@@ -8,19 +8,15 @@ const {
   fetchSongs,
   changePage,
   changeSort,
+  changeLimit,
   playSong,
   formatDuration,
   isSongPlaying,
-} = useSongs();
+} = await useSongs();
 
 const isLoading = computed(() => songsState.loading);
 const hasError = computed(() => !!songsState.error);
 const hasSongs = computed(() => songsState.songs.length > 0);
-
-// Initial data load
-onMounted(async () => {
-  await fetchSongs();
-});
 
 // Method to get sort indicator for the column
 const getSortIndicator = (field: string) => {
@@ -40,6 +36,13 @@ const handleSortKeyDown = (e: KeyboardEvent, field: string) => {
 const handleRetry = () => {
   fetchSongs();
 };
+
+// Handler for limit change
+const handleLimitChange = (event: Event) => {
+  const select = event.target as HTMLSelectElement;
+  const newLimit = Number(select.value);
+  changeLimit(newLimit);
+};
 </script>
 
 <template>
@@ -50,7 +53,7 @@ const handleRetry = () => {
     <div v-if="isLoading && !hasSongs" class="text-center py-12">
       <div
         class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"
-      ></div>
+      />
       <p class="mt-4 text-gray-600">Loading your songs...</p>
     </div>
 
@@ -58,11 +61,11 @@ const handleRetry = () => {
     <div v-else-if="hasError" class="bg-red-50 p-4 rounded-md">
       <p class="text-red-600">{{ songsState.error }}</p>
       <button
-        @click="handleRetry"
-        @keydown.enter="handleRetry"
         class="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
         tabindex="0"
         aria-label="Try again"
+        @click="handleRetry"
+        @keydown.enter="handleRetry"
       >
         Try Again
       </button>
@@ -109,10 +112,10 @@ const handleRetry = () => {
             >
               <button
                 class="group flex items-center focus:outline-none focus:underline"
-                @click="changeSort('title')"
-                @keydown="(e) => handleSortKeyDown(e, 'title')"
                 tabindex="0"
                 aria-label="Sort by title"
+                @click="changeSort('title')"
+                @keydown="(e) => handleSortKeyDown(e, 'title')"
               >
                 Title {{ getSortIndicator("title") }}
               </button>
@@ -123,10 +126,10 @@ const handleRetry = () => {
             >
               <button
                 class="group flex items-center focus:outline-none focus:underline"
-                @click="changeSort('artist')"
-                @keydown="(e) => handleSortKeyDown(e, 'artist')"
                 tabindex="0"
                 aria-label="Sort by artist"
+                @click="changeSort('artist')"
+                @keydown="(e) => handleSortKeyDown(e, 'artist')"
               >
                 Artist {{ getSortIndicator("artist") }}
               </button>
@@ -137,10 +140,10 @@ const handleRetry = () => {
             >
               <button
                 class="group flex items-center focus:outline-none focus:underline"
-                @click="changeSort('album')"
-                @keydown="(e) => handleSortKeyDown(e, 'album')"
                 tabindex="0"
                 aria-label="Sort by album"
+                @click="changeSort('album')"
+                @keydown="(e) => handleSortKeyDown(e, 'album')"
               >
                 Album {{ getSortIndicator("album") }}
               </button>
@@ -151,10 +154,10 @@ const handleRetry = () => {
             >
               <button
                 class="group flex items-center focus:outline-none focus:underline"
-                @click="changeSort('duration')"
-                @keydown="(e) => handleSortKeyDown(e, 'duration')"
                 tabindex="0"
                 aria-label="Sort by duration"
+                @click="changeSort('duration')"
+                @keydown="(e) => handleSortKeyDown(e, 'duration')"
               >
                 Duration {{ getSortIndicator("duration") }}
               </button>
@@ -170,11 +173,11 @@ const handleRetry = () => {
           >
             <td class="px-6 py-4 whitespace-nowrap">
               <button
-                @click="playSong(song)"
-                @keydown.enter="playSong(song)"
                 class="text-indigo-600 hover:text-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full p-1"
                 :aria-label="isSongPlaying(song) ? 'Now playing' : 'Play'"
                 tabindex="0"
+                @click="playSong(song)"
+                @keydown.enter="playSong(song)"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -210,43 +213,43 @@ const handleRetry = () => {
             </td>
             <td
               class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
-              @click="playSong(song)"
-              @keydown.enter="playSong(song)"
               tabindex="0"
               role="button"
               :aria-label="`Play ${song.title}`"
+              @click="playSong(song)"
+              @keydown.enter="playSong(song)"
             >
               {{ song.title }}
             </td>
             <td
               class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-              @click="playSong(song)"
-              @keydown.enter="playSong(song)"
               tabindex="0"
               role="button"
               :aria-label="`Play ${song.title} by ${song.artist}`"
+              @click="playSong(song)"
+              @keydown.enter="playSong(song)"
             >
               {{ song.artist }}
             </td>
             <td
               class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-              @click="playSong(song)"
-              @keydown.enter="playSong(song)"
               tabindex="0"
               role="button"
               :aria-label="`Play ${song.title} from album ${song.album}`"
+              @click="playSong(song)"
+              @keydown.enter="playSong(song)"
             >
               {{ song.album }}
             </td>
             <td
               class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-              @click="playSong(song)"
-              @keydown.enter="playSong(song)"
               tabindex="0"
               role="button"
               :aria-label="`Play ${song.title}, duration: ${formatDuration(
                 song.duration
               )}`"
+              @click="playSong(song)"
+              @keydown.enter="playSong(song)"
             >
               {{ formatDuration(song.duration) }}
             </td>
@@ -274,8 +277,8 @@ const handleRetry = () => {
         <select
           id="limit-select"
           v-model="songsState.limit"
-          @change="fetchSongs(1, songsState.limit)"
           class="rounded border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+          @change="handleLimitChange($event)"
         >
           <option :value="10">10</option>
           <option :value="20">20</option>

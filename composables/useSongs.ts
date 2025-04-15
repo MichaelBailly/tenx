@@ -1,4 +1,6 @@
+import { useFetch } from "#app";
 import { computed, reactive, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import type { ApiSong } from "~/types/api";
 
 // Types
@@ -12,6 +14,31 @@ interface SongsState {
   limit: number;
   sortField: string;
   sortDirection: "asc" | "desc";
+}
+
+interface Pagination {
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+interface SongsApiResponse {
+  success: boolean;
+  error?: string;
+  data?: {
+    songs: ApiSong[];
+    pagination: Pagination;
+  };
+}
+
+interface ApiError {
+  code?: string;
+  data?: {
+    totalPages?: number;
+    totalSongs?: number;
+  };
+  error?: string;
 }
 
 // Create a global store for songs state
@@ -30,7 +57,68 @@ const songsState = reactive<SongsState>({
 // Currently playing song reference
 const currentlyPlaying = ref<ApiSong | null>(null);
 
-export function useSongs() {
+export async function useSongs() {
+  const route = useRoute();
+  const router = useRouter();
+
+  if (import.meta.server) {
+    console.log("on server, useSongs starts");
+  }
+
+  // Initialize state from URL params
+  if (import.meta.server) {
+    console.log("on server, useSongs onMounted() starts");
+  } else {
+    console.log("on client, useSongs onMounted() starts");
+  }
+
+  // Get query parameters
+  const pageParam = Number(route.query.page) || 1;
+  const limitParam = Number(route.query.limit) || 20;
+  const sortParam = (route.query.sort as string) || "title";
+
+  // Parse sort field and direction
+  if (sortParam) {
+    if (sortParam.startsWith("-")) {
+      songsState.sortField = sortParam.substring(1);
+      songsState.sortDirection = "desc";
+    } else {
+      songsState.sortField = sortParam;
+      songsState.sortDirection = "asc";
+    }
+  }
+
+  // Set pagination parameters
+  songsState.currentPage = pageParam;
+  songsState.limit = limitParam;
+
+  // Update URL when state changes
+  const updateURL = (page: number, limit: number, sort: string) => {
+    const query = { ...route.query };
+
+    // Only include parameters that differ from defaults
+    if (page === 1) {
+      delete query.page;
+    } else {
+      query.page = page.toString();
+    }
+
+    if (limit === 20) {
+      delete query.limit;
+    } else {
+      query.limit = limit.toString();
+    }
+
+    if (sort === "title") {
+      delete query.sort;
+    } else {
+      query.sort = sort;
+    }
+
+    // Replace current URL with new query parameters
+    router.replace({ query });
+  };
+
   // Fetch songs with pagination and sorting
   const fetchSongs = async (
     page = songsState.currentPage,
@@ -41,38 +129,71 @@ export function useSongs() {
     songsState.error = null;
 
     try {
-      // Build query params
-      const params = new URLSearchParams();
-      params.append("page", page.toString());
-      params.append("limit", limit.toString());
+      // Build query parameters
+      const query = {
+        page: page.toString(),
+        limit: limit.toString(),
+        sort,
+      };
 
-      if (sort) {
-        params.append("sort", sort);
-      }
+      // Use Nuxt's useFetch instead of native fetch
+      const { data, error } = await useFetch<SongsApiResponse>(
+        "/api/v1/songs",
+        {
+          method: "GET",
+          params: query,
+        }
+      );
 
-      // Make API request
-      const response = await fetch(`/api/v1/songs?${params.toString()}`);
+      // Handle error response
+      if (error.value) {
+        const errorData = error.value.data as ApiError;
 
-      if (!response.ok) {
+        // Handle the specific case of page out of range
+        if (
+          errorData?.code === "PAGE_OUT_OF_RANGE" &&
+          errorData?.data?.totalPages
+        ) {
+          console.warn(
+            `Page ${page} is out of range. Redirecting to last page ${errorData.data.totalPages}`
+          );
+
+          // Update state with the last available page
+          songsState.totalPages = errorData.data.totalPages;
+          songsState.totalSongs = errorData.data.totalSongs || 0;
+
+          // Redirect to the last available page
+          return fetchSongs(errorData.data.totalPages, limit, sort);
+        }
+
         throw new Error(
-          `Failed to fetch songs: ${response.status} ${response.statusText}`
+          errorData?.error || `Failed to fetch songs: ${error.value.message}`
         );
       }
 
-      const data = await response.json();
+      // Make sure we have data
+      if (!data.value?.success || !data.value.data) {
+        throw new Error(data.value?.error || "Failed to fetch songs");
+      }
 
-      if (!data.success) {
-        throw new Error(data.error || "Failed to fetch songs");
+      const responseData = data.value.data;
+
+      // Validate response data shape
+      if (!responseData.songs || !responseData.pagination) {
+        throw new Error("Unexpected API response format");
       }
 
       // Update state with response data
-      songsState.songs = data.data.songs;
-      songsState.currentPage = data.data.pagination.page;
-      songsState.totalPages = data.data.pagination.pages;
-      songsState.totalSongs = data.data.pagination.total;
-      songsState.limit = data.data.pagination.limit;
+      songsState.songs = responseData.songs;
+      songsState.currentPage = responseData.pagination.page;
+      songsState.totalPages = responseData.pagination.pages;
+      songsState.totalSongs = responseData.pagination.total;
+      songsState.limit = responseData.pagination.limit;
 
-      return data.data.songs;
+      // Update URL to reflect current state
+      updateURL(page, limit, sort);
+
+      return responseData.songs;
     } catch (error) {
       songsState.error =
         error instanceof Error ? error.message : "An error occurred";
@@ -95,8 +216,10 @@ export function useSongs() {
       songsState.sortDirection = "asc";
     }
 
-    // Refetch songs with new sort
-    fetchSongs(1, songsState.limit, getSortString());
+    const newSortString = getSortString();
+
+    // Refetch songs with new sort and reset to first page
+    fetchSongs(1, songsState.limit, newSortString);
   };
 
   // Helper to create sort string for API
@@ -110,6 +233,11 @@ export function useSongs() {
   const changePage = (page: number) => {
     if (page < 1 || page > songsState.totalPages) return;
     fetchSongs(page, songsState.limit, getSortString());
+  };
+
+  // Change items per page
+  const changeLimit = (limit: number) => {
+    fetchSongs(1, limit, getSortString());
   };
 
   // Set currently playing song
@@ -128,6 +256,9 @@ export function useSongs() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
+  // Initial fetch uses URL parameters
+  await fetchSongs(pageParam, limitParam, sortParam || getSortString());
+
   return {
     // State
     songsState,
@@ -144,6 +275,7 @@ export function useSongs() {
     fetchSongs,
     changePage,
     changeSort,
+    changeLimit,
     playSong,
     formatDuration,
   };
