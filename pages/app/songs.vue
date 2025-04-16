@@ -4,6 +4,7 @@ import Pagination from "~/components/ui/Pagination.vue";
 import { useSongs } from "~/composables/useSongs";
 import SongSearch from "~/components/shared/SongSearch.vue";
 import SongsTable from "~/components/shared/SongsTable.vue";
+import SongsNavigation from "~/components/shared/SongsNavigation.vue";
 
 // Define page meta to use our app layout
 definePageMeta({
@@ -43,27 +44,7 @@ const handleLimitChange = (event: Event) => {
 <template>
   <div>
     <!-- Tab Navigation -->
-    <div class="mb-4 border-b border-gray-700">
-      <div class="flex space-x-4">
-        <button
-          class="text-yellow-400 border-b-2 border-yellow-400 pb-2 px-1 font-medium"
-        >
-          All Songs
-        </button>
-        <NuxtLink
-          to="/app/artists"
-          class="text-gray-400 hover:text-gray-300 pb-2 px-1 font-medium"
-        >
-          By Artist
-        </NuxtLink>
-        <button class="text-gray-400 hover:text-gray-300 pb-2 px-1 font-medium">
-          By Album
-        </button>
-        <button class="text-gray-400 hover:text-gray-300 pb-2 px-1 font-medium">
-          Recent
-        </button>
-      </div>
-    </div>
+    <SongsNavigation />
 
     <!-- Title and Search with icon toggling search input -->
     <div class="flex items-center justify-between mb-6">
