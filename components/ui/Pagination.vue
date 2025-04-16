@@ -65,7 +65,7 @@ const getPageNumbers = (): PageItem[] => {
         <button
           @click="onPageChange(currentPage - 1)"
           @keydown.enter="onPageChange(currentPage - 1)"
-          class="px-3 py-1 mx-1 rounded border text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="px-3 py-1 mx-1 rounded border border-gray-700 text-sm font-medium text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed bg-gray-800"
           :disabled="currentPage === 1"
           aria-label="Previous page"
           tabindex="0"
@@ -83,15 +83,15 @@ const getPageNumbers = (): PageItem[] => {
           class="px-3 py-1 mx-1 rounded border text-sm font-medium"
           :class="
             currentPage === page
-              ? 'bg-indigo-600 text-white border-indigo-600'
-              : 'text-gray-700 hover:bg-gray-50'
+              ? 'bg-yellow-500 text-gray-900 border-yellow-400'
+              : 'text-gray-300 hover:bg-gray-700 border-gray-700 bg-gray-800'
           "
           :aria-current="currentPage === page ? 'page' : undefined"
           tabindex="0"
         >
           {{ page }}
         </button>
-        <span v-else class="px-3 py-1 mx-1 text-sm text-gray-700">...</span>
+        <span v-else class="px-3 py-1 mx-1 text-sm text-gray-400">...</span>
       </li>
 
       <!-- Next page button -->
@@ -99,7 +99,7 @@ const getPageNumbers = (): PageItem[] => {
         <button
           @click="onPageChange(currentPage + 1)"
           @keydown.enter="onPageChange(currentPage + 1)"
-          class="px-3 py-1 mx-1 rounded border text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="px-3 py-1 mx-1 rounded border border-gray-700 text-sm font-medium text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed bg-gray-800"
           :disabled="currentPage === totalPages || totalPages === 0"
           aria-label="Next page"
           tabindex="0"
