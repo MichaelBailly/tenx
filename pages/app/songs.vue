@@ -3,6 +3,11 @@ import { computed } from "vue";
 import Pagination from "~/components/ui/Pagination.vue";
 import { useSongs } from "~/composables/useSongs";
 
+// Define page meta to use our app layout
+definePageMeta({
+  layout: "app",
+});
+
 const {
   songsState,
   fetchSongs,
@@ -46,7 +51,7 @@ const handleLimitChange = (event: Event) => {
 </script>
 
 <template>
-  <div class="p-6">
+  <div>
     <h1 class="text-2xl font-bold text-gray-900 mb-6">My Songs</h1>
 
     <!-- Loading state -->

@@ -1,3 +1,10 @@
+<script setup lang="ts">
+// Define page meta to use our app layout
+definePageMeta({
+  layout: "default",
+});
+</script>
+
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50">
     <NuxtLink

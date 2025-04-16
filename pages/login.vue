@@ -50,6 +50,10 @@ onMounted(async () => {
     router.push("/app");
   }
 });
+
+definePageMeta({
+  layout: "default",
+});
 </script>
 
 <template>
