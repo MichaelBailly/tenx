@@ -2,10 +2,10 @@
   <div class="flex flex-col min-h-screen bg-gray-900 text-gray-200">
     <!-- Sticky Header with player controls -->
     <header
-      class="fixed top-0 left-0 right-0 bg-gray-800 shadow-md z-10 border-b border-gray-700"
+      class="fixed top-0 left-0 right-0 bg-gray-800 shadow-md z-10 border-b border-gray-700 h-20 truncate"
     >
       <div class="max-w-full px-4">
-        <div class="flex justify-between h-14">
+        <div class="flex justify-between h-20">
           <div class="flex items-center space-x-8">
             <h1 class="text-2xl font-bold text-yellow-400">tenX</h1>
 
@@ -98,13 +98,13 @@
 
     <div class="flex flex-1 pt-14">
       <!-- Main Content -->
-      <main class="flex-1 overflow-y-auto px-4 py-6">
+      <main class="flex-1 overflow-y-auto px-4 py-6 mr-80">
         <slot />
       </main>
 
       <!-- Sticky Side Panel (for playlist) -->
       <aside
-        class="w-80 bg-gray-800 border-l border-gray-700 fixed right-0 top-14 bottom-14 overflow-y-auto"
+        class="w-80 bg-gray-800 border-l border-gray-700 fixed right-0 top-20 bottom-0 overflow-y-auto"
       >
         <div class="p-4">
           <h2 class="text-lg font-medium text-yellow-400">Playlist</h2>
@@ -140,7 +140,9 @@
     </div>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-gray-400 py-4 border-t border-gray-700">
+    <footer
+      class="bg-gray-800 text-gray-400 py-4 border-t border-gray-700 mr-80"
+    >
       <div class="max-w-7xl mx-auto px-4">
         <p class="text-center text-sm">© 2023 tenX Music Player</p>
       </div>
