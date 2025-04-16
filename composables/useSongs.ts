@@ -61,17 +61,6 @@ export async function useSongs() {
   const route = useRoute();
   const router = useRouter();
 
-  if (import.meta.server) {
-    console.log("on server, useSongs starts");
-  }
-
-  // Initialize state from URL params
-  if (import.meta.server) {
-    console.log("on server, useSongs onMounted() starts");
-  } else {
-    console.log("on client, useSongs onMounted() starts");
-  }
-
   // Get query parameters
   const pageParam = Number(route.query.page) || 1;
   const limitParam = Number(route.query.limit) || 20;

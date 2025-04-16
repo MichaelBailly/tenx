@@ -83,3 +83,16 @@ export type MongoSong = {
   user?: string;
   valid?: boolean;
 };
+
+/**
+ * MongoDB Artist document interface (from the artists view)
+ */
+export type MongoArtist = {
+  _id: string; // Unique identifier for the artist (the artist name)
+  songs: MongoSong[]; // Array of songs by the artist
+  count: number; // Number of songs by the artist
+  duration: number; // Total duration of all songs by the artist
+  hits: number; // Total number of hits for all songs by the artist
+  genres: string[]; // Array of genres for all songs by the artist
+  ts_creation: number; // Timestamp of creation of the most recent song
+};
