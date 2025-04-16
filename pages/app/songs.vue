@@ -3,6 +3,7 @@ import { computed, ref, onMounted, nextTick } from "vue";
 import Pagination from "~/components/ui/Pagination.vue";
 import { useSongs } from "~/composables/useSongs";
 import SongSearch from "~/components/shared/SongSearch.vue";
+import SongsTable from "~/components/shared/SongsTable.vue";
 
 // Define page meta to use our app layout
 definePageMeta({
@@ -137,170 +138,16 @@ const handleLimitChange = (event: Event) => {
     </div>
 
     <!-- Songs table -->
-    <div
+    <SongsTable
       v-else
-      class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700"
-    >
-      <table class="min-w-full divide-y divide-gray-700">
-        <thead class="bg-gray-900">
-          <tr>
-            <th
-              scope="col"
-              class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
-            >
-              <!-- Empty header for the play button column -->
-            </th>
-            <th
-              scope="col"
-              class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
-            >
-              <button
-                class="group flex items-center focus:outline-none focus:text-yellow-400"
-                tabindex="0"
-                aria-label="Sort by title"
-                @click="changeSort('title')"
-                @keydown="(e) => handleSortKeyDown(e, 'title')"
-              >
-                Title {{ getSortIndicator("title") }}
-              </button>
-            </th>
-            <th
-              scope="col"
-              class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
-            >
-              <button
-                class="group flex items-center focus:outline-none focus:text-yellow-400"
-                tabindex="0"
-                aria-label="Sort by artist"
-                @click="changeSort('artist')"
-                @keydown="(e) => handleSortKeyDown(e, 'artist')"
-              >
-                Artist {{ getSortIndicator("artist") }}
-              </button>
-            </th>
-            <th
-              scope="col"
-              class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
-            >
-              <button
-                class="group flex items-center focus:outline-none focus:text-yellow-400"
-                tabindex="0"
-                aria-label="Sort by album"
-                @click="changeSort('album')"
-                @keydown="(e) => handleSortKeyDown(e, 'album')"
-              >
-                Album {{ getSortIndicator("album") }}
-              </button>
-            </th>
-            <th
-              scope="col"
-              class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
-            >
-              <button
-                class="group flex items-center focus:outline-none focus:text-yellow-400"
-                tabindex="0"
-                aria-label="Sort by duration"
-                @click="changeSort('duration')"
-                @keydown="(e) => handleSortKeyDown(e, 'duration')"
-              >
-                Duration {{ getSortIndicator("duration") }}
-              </button>
-            </th>
-          </tr>
-        </thead>
-        <tbody class="bg-gray-800 divide-y divide-gray-700">
-          <tr
-            v-for="song in songsState.songs"
-            :key="song._id"
-            :class="{ 'bg-yellow-900/30': isSongPlaying(song) }"
-            class="hover:bg-gray-700 cursor-pointer transition-colors"
-          >
-            <td class="px-6 py-4 whitespace-nowrap">
-              <button
-                class="text-yellow-400 hover:text-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 rounded-full p-1"
-                :aria-label="isSongPlaying(song) ? 'Now playing' : 'Play'"
-                tabindex="0"
-                @click="playSong(song)"
-                @keydown.enter="playSong(song)"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5"
-                  :class="{ 'text-yellow-400': isSongPlaying(song) }"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    v-if="isSongPlaying(song)"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                  <path
-                    v-if="!isSongPlaying(song)"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                  />
-                  <path
-                    v-if="!isSongPlaying(song)"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </button>
-            </td>
-            <td
-              class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-200"
-              tabindex="0"
-              role="button"
-              :aria-label="`Play ${song.title}`"
-              @click="playSong(song)"
-              @keydown.enter="playSong(song)"
-            >
-              {{ song.title }}
-            </td>
-            <td
-              class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"
-              tabindex="0"
-              role="button"
-              :aria-label="`Play ${song.title} by ${song.artist}`"
-              @click="playSong(song)"
-              @keydown.enter="playSong(song)"
-            >
-              {{ song.artist }}
-            </td>
-            <td
-              class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"
-              tabindex="0"
-              role="button"
-              :aria-label="`Play ${song.title} from album ${song.album}`"
-              @click="playSong(song)"
-              @keydown.enter="playSong(song)"
-            >
-              {{ song.album }}
-            </td>
-            <td
-              class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"
-              tabindex="0"
-              role="button"
-              :aria-label="`Play ${song.title}, duration: ${formatDuration(
-                song.duration
-              )}`"
-              @click="playSong(song)"
-              @keydown.enter="playSong(song)"
-            >
-              {{ formatDuration(song.duration) }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      :songs="songsState.songs"
+      :sort-field="songsState.sortField"
+      :sort-direction="songsState.sortDirection"
+      :is-song-playing="isSongPlaying"
+      :format-duration="formatDuration"
+      @sort="changeSort"
+      @play="playSong"
+    />
 
     <!-- Pagination -->
     <Pagination
