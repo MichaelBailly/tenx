@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, onMounted, nextTick } from "vue";
 import Pagination from "~/components/ui/Pagination.vue";
 import { useSongs } from "~/composables/useSongs";
 
@@ -17,11 +17,44 @@ const {
   playSong,
   formatDuration,
   isSongPlaying,
+  searchTerm,
+  changeSearch,
 } = await useSongs();
 
 const isLoading = computed(() => songsState.loading);
 const hasError = computed(() => !!songsState.error);
 const hasSongs = computed(() => songsState.songs.length > 0);
+
+const searchActive = ref(false);
+const searchInput = ref(null);
+
+// Show search field and focus it
+const showSearch = () => {
+  searchActive.value = true;
+  // Use nextTick to ensure the element is in the DOM before focusing
+  nextTick(() => {
+    if (searchInput.value) {
+      searchInput.value.focus();
+    }
+  });
+};
+
+// Clear search without closing
+const clearSearch = () => {
+  changeSearch("");
+  // Focus the input after clearing
+  nextTick(() => {
+    if (searchInput.value) {
+      searchInput.value.focus();
+    }
+  });
+};
+
+// Close search and clear input
+const closeSearch = () => {
+  searchActive.value = false;
+  changeSearch("");
+};
 
 // Method to get sort indicator for the column
 const getSortIndicator = (field: string) => {
@@ -48,6 +81,14 @@ const handleLimitChange = (event: Event) => {
   const newLimit = Number(select.value);
   changeLimit(newLimit);
 };
+
+onMounted(() => {
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && searchActive.value) {
+      closeSearch();
+    }
+  });
+});
 </script>
 
 <template>
@@ -75,7 +116,84 @@ const handleLimitChange = (event: Event) => {
       </div>
     </div>
 
-    <h1 class="text-2xl font-bold text-yellow-400 mb-6">My Songs</h1>
+    <!-- Title and Search with icon toggling search input -->
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-yellow-400">My Songs</h1>
+      <div class="relative flex items-center h-10">
+        <!-- Search icon button (visible when search is not active) -->
+        <div
+          @mouseover="showSearch"
+          class="relative h-10 flex items-center"
+          v-if="!searchActive"
+        >
+          <button
+            class="p-2 rounded-full hover:bg-gray-700 text-gray-300 hover:text-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            aria-label="Open search"
+          >
+            <svg
+              class="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 103 10.5a7.5 7.5 0 0013.15 6.15z"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Search input with animation (appears when search is active) -->
+        <transition
+          enter-active-class="transition-all duration-300 ease-in-out"
+          enter-from-class="opacity-0 w-10"
+          enter-to-class="opacity-100 w-64"
+          leave-active-class="transition-all duration-300 ease-in-out"
+          leave-from-class="opacity-100 w-64"
+          leave-to-class="opacity-0 w-10"
+        >
+          <div v-if="searchActive" class="relative flex items-center h-10">
+            <input
+              id="song-search"
+              type="text"
+              v-model="searchTerm"
+              autocomplete="off"
+              placeholder="Search by title, artist, or album..."
+              class="pl-4 pr-10 py-2 rounded-full bg-gray-900 border border-gray-700 text-gray-200 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400 w-64 h-10"
+              aria-label="Search songs"
+              @input="changeSearch(searchTerm)"
+              @keydown.escape="closeSearch"
+              @blur="!searchTerm && closeSearch()"
+              ref="searchInput"
+            />
+            <button
+              @click="clearSearch"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-400 focus:outline-none"
+              aria-label="Clear search"
+              tabindex="0"
+            >
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </transition>
+      </div>
+    </div>
 
     <!-- Loading state -->
     <div v-if="isLoading && !hasSongs" class="text-center py-12">
