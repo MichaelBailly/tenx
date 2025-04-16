@@ -76,32 +76,96 @@ export default defineEventHandler(async (event) => {
       sortObj[sort] = 1;
     }
 
-    // Count total documents first
-    const totalSongs = await songsCollection.countDocuments();
-    const totalPages = Math.ceil(totalSongs / limit);
+    const q = (query.q as string)?.trim();
 
-    // Check if requested page exceeds total pages
-    if (page > totalPages && totalSongs > 0) {
-      // If the requested page is out of range, redirect to the last page
+    if (q && q.length < 2) {
       return sendApiResponse(event, {
         success: false,
-        error: "Page number exceeds available pages",
-        code: "PAGE_OUT_OF_RANGE",
+        error: "Invalid parameter: q must be at least 2 characters",
+        code: "INVALID_PARAMETER",
         statusCode: 400,
-        data: {
-          totalPages,
-          totalSongs,
-        },
       });
     }
 
-    // Get songs with pagination
-    const songs = await songsCollection
-      .find({})
-      .sort(sortObj)
-      .skip(skip)
-      .limit(limit)
-      .toArray();
+    let songs: MongoSong[] = [];
+    let totalSongs = 0;
+    let totalPages = 0;
+
+    if (q) {
+      // 1. Search tokentitle (title starts with q)
+      const titleRegex = new RegExp(`^${q}`, "i");
+      const titleMatches = await songsCollection
+        .find({ tokentitle: { $regex: titleRegex } })
+        .sort(sortObj)
+        .toArray();
+
+      // 2. Search tokenartists (any entry starts with q)
+      const artistRegex = new RegExp(`^${q}`, "i");
+      const artistMatches = await songsCollection
+        .find({ tokenartists: { $elemMatch: { $regex: artistRegex } } })
+        .sort(sortObj)
+        .toArray();
+
+      // 3. Search album (album starts with q)
+      const albumRegex = new RegExp(`^${q}`, "i");
+      const albumMatches = await songsCollection
+        .find({ album: { $regex: albumRegex } })
+        .sort(sortObj)
+        .toArray();
+
+      // Deduplicate: tokentitle > tokenartists > album
+      const seen = new Set<string>();
+      const deduped: MongoSong[] = [];
+      for (const s of titleMatches) {
+        if (!seen.has(String(s._id))) {
+          deduped.push(s);
+          seen.add(String(s._id));
+        }
+      }
+      for (const s of artistMatches) {
+        if (!seen.has(String(s._id))) {
+          deduped.push(s);
+          seen.add(String(s._id));
+        }
+      }
+      for (const s of albumMatches) {
+        if (!seen.has(String(s._id))) {
+          deduped.push(s);
+          seen.add(String(s._id));
+        }
+      }
+      totalSongs = deduped.length;
+      totalPages = Math.ceil(totalSongs / limit);
+      // Pagination
+      songs = deduped.slice(skip, skip + limit);
+    } else {
+      // Count total documents first
+      totalSongs = await songsCollection.countDocuments();
+      totalPages = Math.ceil(totalSongs / limit);
+
+      // Check if requested page exceeds total pages
+      if (page > totalPages && totalSongs > 0) {
+        // If the requested page is out of range, redirect to the last page
+        return sendApiResponse(event, {
+          success: false,
+          error: "Page number exceeds available pages",
+          code: "PAGE_OUT_OF_RANGE",
+          statusCode: 400,
+          data: {
+            totalPages,
+            totalSongs,
+          },
+        });
+      }
+
+      // Get songs with pagination
+      songs = await songsCollection
+        .find({})
+        .sort(sortObj)
+        .skip(skip)
+        .limit(limit)
+        .toArray();
+    }
 
     // Enhance songs with canEdit field and ensure they match the ApiSong type
     const enhancedSongs = songs.map((song) => {
@@ -140,7 +204,7 @@ export default defineEventHandler(async (event) => {
 
     songsApiLogger.debug(
       { count: enhancedSongs.length, total: totalSongs, page, totalPages },
-      "Songs retrieved successfully"
+      q ? "Songs search retrieved successfully" : "Songs retrieved successfully"
     );
 
     const result = {
