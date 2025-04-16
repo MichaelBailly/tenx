@@ -54,6 +54,37 @@ const handleLimitChange = (event: Event) => {
 
 // Go back to artists list
 const goBackToArtists = () => {
+  // Check if there's a back URL in the history state
+  const historyState = window.history.state;
+
+  if (
+    historyState &&
+    historyState.back &&
+    historyState.back.includes("/app/artists")
+  ) {
+    // Extract query parameters from the back URL if present
+    const backUrl = historyState.back;
+    const queryParamsMatch = backUrl.match(/\?(.+)$/);
+
+    if (queryParamsMatch) {
+      // Parse the query parameters from the URL
+      const queryParams = {};
+      const searchParams = new URLSearchParams(queryParamsMatch[1]);
+
+      for (const [key, value] of searchParams.entries()) {
+        queryParams[key] = value;
+      }
+
+      // Navigate back with the extracted query parameters
+      router.push({
+        path: "/app/artists",
+        query: queryParams,
+      });
+      return;
+    }
+  }
+
+  // Fallback to simple navigation if no query params were found
   router.push("/app/artists");
 };
 </script>

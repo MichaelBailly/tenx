@@ -1,45 +1,8 @@
 import { useFetch } from "#app";
 import { computed, reactive, ref } from "vue";
 import type { ApiSong } from "~/types/api";
-
-type ArtistSongsState = {
-  songs: ApiSong[];
-  loading: boolean;
-  error: string | null;
-  currentPage: number;
-  totalPages: number;
-  totalSongs: number;
-  limit: number;
-  sortField: string;
-  sortDirection: "asc" | "desc";
-  artistId: string | null;
-};
-
-type Pagination = {
-  total: number;
-  page: number;
-  limit: number;
-  pages: number;
-};
-
-type SongsApiResponse = {
-  success: boolean;
-  error?: string;
-  data?: {
-    songs: ApiSong[];
-    pagination: Pagination;
-    artist: string;
-  };
-};
-
-type ApiError = {
-  code?: string;
-  data?: {
-    totalPages?: number;
-    totalSongs?: number;
-  };
-  error?: string;
-};
+import type { ArtistSongsApiResponse, ArtistSongsState } from "~/types/artists";
+import type { ApiError } from "~/types/common";
 
 // Currently playing song reference (shared with useSongs)
 const currentlyPlaying = ref<ApiSong | null>(null);
@@ -90,7 +53,7 @@ export async function useArtistSongs() {
       };
 
       // Use Nuxt's useFetch instead of native fetch
-      const { data, error } = await useFetch<SongsApiResponse>(
+      const { data, error } = await useFetch<ArtistSongsApiResponse>(
         `/api/v1/artists/${encodeURIComponent(artistId)}/songs`,
         {
           method: "GET",

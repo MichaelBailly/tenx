@@ -1,53 +1,8 @@
 import { useFetch } from "#app";
 import { reactive } from "vue";
 import { useRoute, useRouter } from "vue-router";
-
-// Types
-export type Artist = {
-  _id: string;
-  count: number;
-  duration: number;
-  hits: number;
-  genres: string[];
-  ts_creation: number;
-};
-
-type ArtistsState = {
-  artists: Artist[];
-  loading: boolean;
-  error: string | null;
-  currentPage: number;
-  totalPages: number;
-  totalArtists: number;
-  limit: number;
-  sortField: string;
-  sortDirection: "asc" | "desc";
-};
-
-type Pagination = {
-  total: number;
-  page: number;
-  limit: number;
-  pages: number;
-};
-
-type ArtistsApiResponse = {
-  success: boolean;
-  error?: string;
-  data?: {
-    artists: Artist[];
-    pagination: Pagination;
-  };
-};
-
-type ApiError = {
-  code?: string;
-  data?: {
-    totalPages?: number;
-    totalArtists?: number;
-  };
-  error?: string;
-};
+import type { ArtistsApiResponse, ArtistsState } from "~/types/artists";
+import type { ApiError } from "~/types/common";
 
 // Create global store for state
 const artistsState = reactive<ArtistsState>({

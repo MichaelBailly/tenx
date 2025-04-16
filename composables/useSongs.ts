@@ -2,44 +2,8 @@ import { useFetch } from "#app";
 import { computed, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import type { ApiSong } from "~/types/api";
-
-// Types
-type SongsState = {
-  songs: ApiSong[];
-  loading: boolean;
-  error: string | null;
-  currentPage: number;
-  totalPages: number;
-  totalSongs: number;
-  limit: number;
-  sortField: string;
-  sortDirection: "asc" | "desc";
-};
-
-type Pagination = {
-  total: number;
-  page: number;
-  limit: number;
-  pages: number;
-};
-
-type SongsApiResponse = {
-  success: boolean;
-  error?: string;
-  data?: {
-    songs: ApiSong[];
-    pagination: Pagination;
-  };
-};
-
-type ApiError = {
-  code?: string;
-  data?: {
-    totalPages?: number;
-    totalSongs?: number;
-  };
-  error?: string;
-};
+import type { ApiError } from "~/types/common";
+import type { SongsApiResponse, SongsState } from "~/types/songs";
 
 // Create a global store for songs state
 const songsState = reactive<SongsState>({
