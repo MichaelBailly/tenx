@@ -3,16 +3,16 @@ import { reactive } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 // Types
-export interface Artist {
+export type Artist = {
   _id: string;
   count: number;
   duration: number;
   hits: number;
   genres: string[];
   ts_creation: number;
-}
+};
 
-interface ArtistsState {
+type ArtistsState = {
   artists: Artist[];
   loading: boolean;
   error: string | null;
@@ -22,32 +22,32 @@ interface ArtistsState {
   limit: number;
   sortField: string;
   sortDirection: "asc" | "desc";
-}
+};
 
-interface Pagination {
+type Pagination = {
   total: number;
   page: number;
   limit: number;
   pages: number;
-}
+};
 
-interface ArtistsApiResponse {
+type ArtistsApiResponse = {
   success: boolean;
   error?: string;
   data?: {
     artists: Artist[];
     pagination: Pagination;
   };
-}
+};
 
-interface ApiError {
+type ApiError = {
   code?: string;
   data?: {
     totalPages?: number;
     totalArtists?: number;
   };
   error?: string;
-}
+};
 
 // Create global store for state
 const artistsState = reactive<ArtistsState>({

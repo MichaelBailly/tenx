@@ -2,7 +2,7 @@ import { useFetch } from "#app";
 import { computed, reactive, ref } from "vue";
 import type { ApiSong } from "~/types/api";
 
-interface ArtistSongsState {
+type ArtistSongsState = {
   songs: ApiSong[];
   loading: boolean;
   error: string | null;
@@ -13,16 +13,16 @@ interface ArtistSongsState {
   sortField: string;
   sortDirection: "asc" | "desc";
   artistId: string | null;
-}
+};
 
-interface Pagination {
+type Pagination = {
   total: number;
   page: number;
   limit: number;
   pages: number;
-}
+};
 
-interface SongsApiResponse {
+type SongsApiResponse = {
   success: boolean;
   error?: string;
   data?: {
@@ -30,16 +30,16 @@ interface SongsApiResponse {
     pagination: Pagination;
     artist: string;
   };
-}
+};
 
-interface ApiError {
+type ApiError = {
   code?: string;
   data?: {
     totalPages?: number;
     totalSongs?: number;
   };
   error?: string;
-}
+};
 
 // Currently playing song reference (shared with useSongs)
 const currentlyPlaying = ref<ApiSong | null>(null);

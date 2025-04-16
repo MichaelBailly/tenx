@@ -4,7 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import type { ApiSong } from "~/types/api";
 
 // Types
-interface SongsState {
+type SongsState = {
   songs: ApiSong[];
   loading: boolean;
   error: string | null;
@@ -14,32 +14,32 @@ interface SongsState {
   limit: number;
   sortField: string;
   sortDirection: "asc" | "desc";
-}
+};
 
-interface Pagination {
+type Pagination = {
   total: number;
   page: number;
   limit: number;
   pages: number;
-}
+};
 
-interface SongsApiResponse {
+type SongsApiResponse = {
   success: boolean;
   error?: string;
   data?: {
     songs: ApiSong[];
     pagination: Pagination;
   };
-}
+};
 
-interface ApiError {
+type ApiError = {
   code?: string;
   data?: {
     totalPages?: number;
     totalSongs?: number;
   };
   error?: string;
-}
+};
 
 // Create a global store for songs state
 const songsState = reactive<SongsState>({
