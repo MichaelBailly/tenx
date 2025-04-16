@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { defineProps, defineEmits } from "vue";
+import { NuxtLink } from "#components";
+import { defineEmits, defineProps } from "vue";
 
 interface Song {
   _id: string;
   title: string;
   artist: string;
+  tokenartists: string[];
   album: string;
   duration: number;
 }
@@ -156,13 +158,35 @@ const handleSortKeyDown = (e: KeyboardEvent, field: string) => {
           </td>
           <td
             class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"
-            tabindex="0"
-            role="button"
-            :aria-label="`Play ${song.title} by ${song.artist}`"
-            @click="emit('play', song)"
-            @keydown.enter="emit('play', song)"
+            @click.stop
           >
-            {{ song.artist }}
+            <div
+              class="flex flex-wrap gap-1"
+              v-if="song.tokenartists && song.tokenartists.length"
+            >
+              <template
+                v-for="(artist, index) in song.tokenartists"
+                :key="artist"
+              >
+                <NuxtLink
+                  :to="`/app/artists/${encodeURIComponent(artist)}`"
+                  class="text-yellow-400 hover:text-yellow-300 focus:outline-none focus:text-yellow-300"
+                  tabindex="0"
+                >
+                  {{ artist }}
+                </NuxtLink>
+                <span v-if="index < song.tokenartists.length - 1">, </span>
+              </template>
+            </div>
+            <span
+              v-else
+              tabindex="0"
+              role="button"
+              @click="emit('play', song)"
+              @keydown.enter="emit('play', song)"
+            >
+              {{ song.artist }}
+            </span>
           </td>
           <td
             class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"
