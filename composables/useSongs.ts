@@ -82,6 +82,9 @@ export async function useSongs() {
     router.replace({ query });
   };
 
+  // Track the latest search request
+  let latestSearchRequestId = 0;
+
   // Fetch songs with pagination, sorting, and search
   const fetchSongs = async (
     page = songsState.currentPage,
@@ -91,6 +94,9 @@ export async function useSongs() {
   ) => {
     songsState.loading = true;
     songsState.error = null;
+
+    // Increment request id for each new search
+    const requestId = ++latestSearchRequestId;
 
     try {
       // Build query parameters
@@ -110,6 +116,9 @@ export async function useSongs() {
           params: query,
         }
       );
+
+      // Only update state if this is the latest request
+      if (requestId !== latestSearchRequestId) return;
 
       // Handle error response
       if (error.value) {
@@ -161,12 +170,15 @@ export async function useSongs() {
 
       return responseData.songs;
     } catch (error) {
+      if (requestId !== latestSearchRequestId) return;
       songsState.error =
         error instanceof Error ? error.message : "An error occurred";
       console.error("Error fetching songs:", error);
       return [];
     } finally {
-      songsState.loading = false;
+      if (requestId === latestSearchRequestId) {
+        songsState.loading = false;
+      }
     }
   };
 

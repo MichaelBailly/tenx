@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, nextTick } from "vue";
+import { computed } from "vue";
 import Pagination from "~/components/ui/Pagination.vue";
 import { useSongs } from "~/composables/useSongs";
 import SongSearch from "~/components/shared/SongSearch.vue";
@@ -26,20 +26,6 @@ const {
 const isLoading = computed(() => songsState.loading);
 const hasError = computed(() => !!songsState.error);
 const hasSongs = computed(() => songsState.songs.length > 0);
-
-// Method to get sort indicator for the column
-const getSortIndicator = (field: string) => {
-  if (field !== songsState.sortField) return "";
-  return songsState.sortDirection === "asc" ? "↑" : "↓";
-};
-
-// Helper for accessible sort button
-const handleSortKeyDown = (e: KeyboardEvent, field: string) => {
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    changeSort(field);
-  }
-};
 
 // Handler for retry button
 const handleRetry = () => {
