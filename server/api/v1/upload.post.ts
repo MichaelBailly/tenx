@@ -10,6 +10,134 @@ import type { MongoSong } from "~/types/mongo";
 import { Config } from "../../utils/config";
 import { getSongUUID } from "../../utils/ids";
 
+// --- Helper: Temp folder and file management ---
+function createTempFolder(): string {
+  const tempFolder = fs.mkdtempSync(
+    path.join(Config.storage.tempDir, "upload-")
+  );
+  return tempFolder;
+}
+
+function getTempFilePaths(tempFolder: string) {
+  return {
+    mp3Path: path.join(tempFolder, "file.mp3"),
+    oggPath: path.join(tempFolder, "file.ogg"),
+    metaPath: path.join(tempFolder, "metadata.json"),
+    songJsonPath: path.join(tempFolder, "song.json"),
+  };
+}
+
+// --- Helper: MP3 validation and SHA1 calculation ---
+async function validateAndHashMp3(
+  mp3Path: string
+): Promise<{ metadata: IAudioMetadata; sha1: string }> {
+  const metadata = await parseFile(mp3Path);
+  if (!metadata.format.container?.toLowerCase().includes("mpeg")) {
+    throw new Error("Uploaded file is not a valid MP3");
+  }
+  const mp3Buffer = await fs.promises.readFile(mp3Path);
+  const sha1 = crypto.createHash("sha1").update(mp3Buffer).digest("hex");
+  return { metadata, sha1 };
+}
+
+// --- Helper: OGG conversion ---
+function convertMp3ToOgg(mp3Path: string, oggPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const lameProc = spawn("lame", ["--silent", "--decode", mp3Path, "-"]);
+    const oggencProc = spawn("oggenc", ["-Q", "-", "-o", oggPath]);
+    lameProc.stdout.pipe(oggencProc.stdin);
+    lameProc.stderr.on("data", (data) => {
+      console.log("[upload] lame stderr:", data.toString());
+    });
+    oggencProc.stderr.on("data", (data) => {
+      console.log("[upload] oggenc stderr:", data.toString());
+    });
+    lameProc.on("error", (err) => {
+      console.log("[upload] lame process error:", err);
+    });
+    oggencProc.on("error", (err) => {
+      console.log("[upload] oggenc process error:", err);
+    });
+    oggencProc.on("exit", (code: number) => {
+      if (code === 0) {
+        console.log("[upload] OGG conversion successful:", oggPath);
+        resolve();
+      } else {
+        console.log("[upload] OGG conversion failed");
+        reject(new Error("oggenc conversion failed"));
+      }
+    });
+  });
+}
+
+// --- Helper: Image extraction ---
+async function extractImages(
+  metadata: IAudioMetadata,
+  tempFolder: string
+): Promise<MongoSong["images"]> {
+  const images: MongoSong["images"] = [];
+  if (metadata.common.picture && Array.isArray(metadata.common.picture)) {
+    for (let i = 0; i < metadata.common.picture.length; i++) {
+      const pic = metadata.common.picture[i];
+      if (pic && pic.data && pic.format) {
+        const ext = pic.format.split("/").pop() || "img";
+        const imgFilename = `cover_${i}.${ext}`;
+        const imgPath = path.join(tempFolder, imgFilename);
+        await fs.promises.writeFile(imgPath, pic.data);
+        const imgBuffer = await fs.promises.readFile(imgPath);
+        const sha1 = crypto.createHash("sha1").update(imgBuffer).digest("hex");
+        images.push({ filename: imgFilename, sha1, alternatives: {} });
+      }
+    }
+  }
+  return images;
+}
+
+// --- Helper: MongoSong creation ---
+function createMongoSong({
+  metadata,
+  mp3Sha1,
+  filenameToUse,
+  images,
+}: {
+  metadata: IAudioMetadata;
+  mp3Sha1: string;
+  filenameToUse: string;
+  images: MongoSong["images"];
+}): MongoSong {
+  const songId = getSongUUID();
+  const title = metadata.common.title || undefined;
+  const artist = metadata.common.artist || undefined;
+  const genre = Array.isArray(metadata.common.genre)
+    ? metadata.common.genre[0]
+    : metadata.common.genre;
+  const valid = Boolean(
+    title && artist && genre && title !== "" && artist !== "" && genre !== ""
+  );
+  return {
+    _id: songId,
+    album: metadata.common.album || undefined,
+    artist,
+    date: metadata.common.year || undefined,
+    duration: metadata.format.duration || undefined,
+    filename: filenameToUse,
+    genre,
+    title,
+    tracknumber: metadata.common.track?.no || undefined,
+    images: Array.isArray(images) ? images : undefined,
+    ts_creation: Date.now(),
+    valid,
+    sha1: mp3Sha1,
+    sourceFile:
+      metadata.format.container && metadata.format.codec
+        ? {
+            type: metadata.format.container,
+            extension: path.extname(filenameToUse).replace(".", ""),
+          }
+        : undefined,
+  };
+}
+
 export default defineEventHandler(async (event) => {
   const req = event.node.req;
   const headers = req.headers;
@@ -38,14 +166,10 @@ export default defineEventHandler(async (event) => {
       ) => {
         console.log(`[upload] File field received: ${fieldname}`);
         uploadedFilename = filename;
-        // Use configured temp directory
-        const tempFolder = fs.mkdtempSync(
-          path.join(Config.storage.tempDir, "upload-")
-        );
+        const tempFolder = createTempFolder();
         console.log(`[upload] Created temp folder: ${tempFolder}`);
-        const mp3Path = path.join(tempFolder, "file.mp3");
-        const oggPath = path.join(tempFolder, "file.ogg");
-        const metaPath = path.join(tempFolder, "metadata.json");
+        const { mp3Path, oggPath, metaPath, songJsonPath } =
+          getTempFilePaths(tempFolder);
 
         const mp3Write = fs.createWriteStream(mp3Path);
         fileStream.pipe(mp3Write);
@@ -54,154 +178,32 @@ export default defineEventHandler(async (event) => {
         mp3Write.on("finish", async () => {
           console.log("[upload] Finished writing MP3 file");
           try {
-            const metadata: IAudioMetadata = await parseFile(mp3Path);
-            console.log("[upload] Extracted metadata:", metadata);
-            if (!metadata.format.container?.toLowerCase().includes("mpeg")) {
-              console.log("[upload] File is not a valid MP3");
-              throw new Error("Uploaded file is not a valid MP3");
-            }
-
-            // Compute SHA1 of the original uploaded MP3
-            const mp3Buffer = await fs.promises.readFile(mp3Path);
-            const mp3Sha1 = crypto
-              .createHash("sha1")
-              .update(mp3Buffer)
-              .digest("hex");
-
-            // --- Start OGG conversion (async) ---
-            const oggPromise = new Promise<void>((res, rej) => {
-              const lameProc = spawn("lame", [
-                "--silent",
-                "--decode",
-                mp3Path,
-                "-",
-              ]);
-              const oggencProc = spawn("oggenc", ["-Q", "-", "-o", oggPath]);
-              lameProc.stdout.pipe(oggencProc.stdin);
-              console.log("[upload] Started MP3 -> OGG conversion");
-              lameProc.stderr.on("data", (data) => {
-                console.log("[upload] lame stderr:", data.toString());
-              });
-              oggencProc.stderr.on("data", (data) => {
-                console.log("[upload] oggenc stderr:", data.toString());
-              });
-              lameProc.on("error", (err) => {
-                console.log("[upload] lame process error:", err);
-              });
-              oggencProc.on("error", (err) => {
-                console.log("[upload] oggenc process error:", err);
-              });
-              lameProc.on("close", (code, signal) => {
-                console.log(
-                  `[upload] lame process closed with code ${code}, signal ${signal}`
-                );
-              });
-              oggencProc.on("close", (code, signal) => {
-                console.log(
-                  `[upload] oggenc process closed with code ${code}, signal ${signal}`
-                );
-              });
-              oggencProc.on("exit", (code: number) => {
-                if (code === 0) {
-                  console.log("[upload] OGG conversion successful:", oggPath);
-                  res();
-                } else {
-                  console.log("[upload] OGG conversion failed");
-                  rej(new Error("oggenc conversion failed"));
-                }
-              });
-            });
-
-            // --- Extract images from metadata (async) ---
-            const images: MongoSong["images"] = [];
-            const imagePromise = (async () => {
-              if (
-                metadata.common.picture &&
-                Array.isArray(metadata.common.picture)
-              ) {
-                for (let i = 0; i < metadata.common.picture.length; i++) {
-                  const pic = metadata.common.picture[i];
-                  if (pic && pic.data && pic.format) {
-                    const ext = pic.format.split("/").pop() || "img";
-                    const imgFilename = `cover_${i}.${ext}`;
-                    const imgPath = path.join(tempFolder, imgFilename);
-                    await fs.promises.writeFile(imgPath, pic.data);
-                    // Compute SHA1 hash of the image file
-                    const imgBuffer = await fs.promises.readFile(imgPath);
-                    const sha1 = crypto
-                      .createHash("sha1")
-                      .update(imgBuffer)
-                      .digest("hex");
-                    console.log(`[upload] Extracted image to: ${imgPath}`);
-                    images.push({
-                      filename: imgFilename,
-                      sha1,
-                      alternatives: {},
-                    });
-                  }
-                }
-              }
-            })();
-
-            // --- Wait for both to finish ---
-            await Promise.all([oggPromise, imagePromise]);
-
-            // --- Create MongoSong object ---
-            const songId = getSongUUID();
-            // Ensure uploadedFilename is a string
-            let filenameToUse = "file.mp3";
-            console.log(
-              "[upload] Using filename from upload:",
-              uploadedFilename,
-              "or defaulting to file.mp3"
+            const { metadata, sha1: mp3Sha1 } = await validateAndHashMp3(
+              mp3Path
             );
+            const oggPromise = convertMp3ToOgg(mp3Path, oggPath);
+            const imagePromise = extractImages(metadata, tempFolder);
+            const images = await imagePromise;
+            await oggPromise;
+
+            let filenameToUse = "file.mp3";
             if (
               typeof uploadedFilename === "string" &&
               uploadedFilename.trim() !== ""
             ) {
               filenameToUse = uploadedFilename;
             }
-            const title = metadata.common.title || undefined;
-            const artist = metadata.common.artist || undefined;
-            const genre = Array.isArray(metadata.common.genre)
-              ? metadata.common.genre[0]
-              : metadata.common.genre;
-            const valid = Boolean(
-              title &&
-                artist &&
-                genre &&
-                title !== "" &&
-                artist !== "" &&
-                genre !== ""
-            );
-            const mongoSong: MongoSong = {
-              _id: songId,
-              album: metadata.common.album || undefined,
-              artist,
-              date: metadata.common.year || undefined,
-              duration: metadata.format.duration || undefined,
-              filename: filenameToUse,
-              genre,
-              title,
-              tracknumber: metadata.common.track.no || undefined,
-              images: images.length > 0 ? images : undefined,
-              ts_creation: Date.now(),
-              valid,
-              sha1: mp3Sha1,
-              sourceFile:
-                metadata.format.container && metadata.format.codec
-                  ? {
-                      type: metadata.format.container,
-                      extension: path.extname(filenameToUse).replace(".", ""),
-                    }
-                  : undefined,
-            };
+            const mongoSong = createMongoSong({
+              metadata,
+              mp3Sha1,
+              filenameToUse,
+              images,
+            });
 
             // write metadata json
             const record = { mp3: mp3Path, ogg: oggPath, metadata };
             fs.writeFileSync(metaPath, JSON.stringify(record, null, 2));
             // write song.json
-            const songJsonPath = path.join(tempFolder, "song.json");
             fs.writeFileSync(songJsonPath, JSON.stringify(mongoSong, null, 2));
             console.log("[upload] Wrote metadata JSON:", metaPath);
             console.log("[upload] Wrote MongoSong JSON:", songJsonPath);
