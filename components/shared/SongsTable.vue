@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { NuxtLink } from "#components";
-import { defineEmits, defineProps } from "vue";
 
 interface Song {
   _id: string;

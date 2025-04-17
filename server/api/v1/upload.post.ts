@@ -7,6 +7,7 @@ import type { IAudioMetadata } from "music-metadata";
 import { parseFile } from "music-metadata";
 import path from "path";
 import { DatabaseService } from "~/server/utils/db";
+import { tokenizeSong } from "~/server/utils/songs";
 import type { MongoSong } from "~/types/mongo";
 import { Config } from "../../utils/config";
 import { getImageUUID, getSongUUID } from "../../utils/ids";
@@ -132,14 +133,15 @@ function createMongoSong({
   userId: string;
 }): MongoSong {
   const songId = getSongUUID();
-  const title = metadata.common.title || undefined;
-  const artist = metadata.common.artist || undefined;
+  const title = metadata.common.title || "";
+  const artist = metadata.common.artist || "";
   const genre = Array.isArray(metadata.common.genre)
     ? metadata.common.genre[0]
     : metadata.common.genre;
   const valid = Boolean(
     title && artist && genre && title !== "" && artist !== "" && genre !== ""
   );
+  const artistsAndTitle = tokenizeSong({ artist, title });
   return {
     _id: songId,
     album: metadata.common.album || undefined,
@@ -149,6 +151,9 @@ function createMongoSong({
     filename: filenameToUse,
     genre,
     title,
+    tokenartists: artistsAndTitle.artists,
+    tokentitle: artistsAndTitle.title,
+    hits: 0,
     tracknumber: metadata.common.track?.no || undefined,
     images: Array.isArray(images) ? images : undefined,
     ts_creation: Date.now(),
@@ -204,8 +209,7 @@ export default defineEventHandler(async (event) => {
         uploadedFilename = filename;
         const tempFolder = createTempFolder();
         console.log(`[upload] Created temp folder: ${tempFolder}`);
-        const { mp3Path, oggPath, metaPath, songJsonPath } =
-          getTempFilePaths(tempFolder);
+        const { mp3Path, oggPath } = getTempFilePaths(tempFolder);
 
         fileProcessingPromise = (async () => {
           try {
@@ -221,8 +225,26 @@ export default defineEventHandler(async (event) => {
             const { metadata, sha1: mp3Sha1 } = await validateAndHashMp3(
               mp3Path
             );
-            await convertMp3ToOgg(mp3Path, oggPath);
-            const images = await extractImages(metadata, tempFolder);
+
+            // Deduplication: check if SHA1 already exists
+            const db = DatabaseService.getInstance();
+            await db.connect();
+            const songsCollection = db.getCollection<MongoSong>("songs");
+            const existingSong = await songsCollection.findOne({
+              sha1: mp3Sha1,
+            });
+            if (existingSong) {
+              throw createError({
+                statusCode: 409,
+                statusMessage:
+                  "A song with this file already exists (duplicate SHA1)",
+              });
+            }
+
+            const [_, images] = await Promise.all([
+              convertMp3ToOgg(mp3Path, oggPath),
+              extractImages(metadata, tempFolder),
+            ]);
 
             let filenameToUse = "file.mp3";
             if (
@@ -240,13 +262,10 @@ export default defineEventHandler(async (event) => {
             });
 
             // Insert mongoSong into MongoDB
-            const db = DatabaseService.getInstance();
-            await db.connect();
-            const songsCollection = db.getCollection<MongoSong>("songs");
             await songsCollection.insertOne(mongoSong);
 
             handled = true;
-            resolve({ tempFolder, record, mongoSong });
+            resolve({ tempFolder, mongoSong });
           } catch (err: unknown) {
             const message = err instanceof Error ? err.message : String(err);
             console.log("[upload] Error during upload processing:", message);
