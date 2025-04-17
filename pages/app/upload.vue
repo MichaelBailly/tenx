@@ -82,6 +82,7 @@ async function handleUpload() {
   try {
     const formData = new FormData();
     formData.append("file", file.value);
+    formData.append("filename", file.value.name); // Send original filename
     const res = await fetch("/api/v1/upload", {
       method: "POST",
       body: formData,

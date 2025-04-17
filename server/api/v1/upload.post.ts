@@ -1,11 +1,14 @@
 import Busboy from "busboy";
 import { spawn } from "child_process";
+import crypto from "crypto";
 import fs from "fs";
 import { createError, defineEventHandler } from "h3";
 import type { IAudioMetadata } from "music-metadata";
 import { parseFile } from "music-metadata";
 import path from "path";
+import type { MongoSong } from "~/types/mongo";
 import { Config } from "../../utils/config";
+import { getSongUUID } from "../../utils/ids";
 
 export default defineEventHandler(async (event) => {
   const req = event.node.req;
@@ -24,11 +27,17 @@ export default defineEventHandler(async (event) => {
     console.log("[upload] Incoming upload request");
     const busboy = Busboy({ headers });
     let handled = false;
+    let uploadedFilename: string | undefined;
 
     busboy.on(
       "file",
-      (fieldname: string, fileStream: NodeJS.ReadableStream) => {
+      (
+        fieldname: string,
+        fileStream: NodeJS.ReadableStream,
+        filename: string
+      ) => {
         console.log(`[upload] File field received: ${fieldname}`);
+        uploadedFilename = filename;
         // Use configured temp directory
         const tempFolder = fs.mkdtempSync(
           path.join(Config.storage.tempDir, "upload-")
@@ -51,6 +60,13 @@ export default defineEventHandler(async (event) => {
               console.log("[upload] File is not a valid MP3");
               throw new Error("Uploaded file is not a valid MP3");
             }
+
+            // Compute SHA1 of the original uploaded MP3
+            const mp3Buffer = await fs.promises.readFile(mp3Path);
+            const mp3Sha1 = crypto
+              .createHash("sha1")
+              .update(mp3Buffer)
+              .digest("hex");
 
             // --- Start OGG conversion (async) ---
             const oggPromise = new Promise<void>((res, rej) => {
@@ -97,6 +113,7 @@ export default defineEventHandler(async (event) => {
             });
 
             // --- Extract images from metadata (async) ---
+            const images: MongoSong["images"] = [];
             const imagePromise = (async () => {
               if (
                 metadata.common.picture &&
@@ -106,9 +123,21 @@ export default defineEventHandler(async (event) => {
                   const pic = metadata.common.picture[i];
                   if (pic && pic.data && pic.format) {
                     const ext = pic.format.split("/").pop() || "img";
-                    const imgPath = path.join(tempFolder, `cover_${i}.${ext}`);
+                    const imgFilename = `cover_${i}.${ext}`;
+                    const imgPath = path.join(tempFolder, imgFilename);
                     await fs.promises.writeFile(imgPath, pic.data);
+                    // Compute SHA1 hash of the image file
+                    const imgBuffer = await fs.promises.readFile(imgPath);
+                    const sha1 = crypto
+                      .createHash("sha1")
+                      .update(imgBuffer)
+                      .digest("hex");
                     console.log(`[upload] Extracted image to: ${imgPath}`);
+                    images.push({
+                      filename: imgFilename,
+                      sha1,
+                      alternatives: {},
+                    });
                   }
                 }
               }
@@ -117,13 +146,68 @@ export default defineEventHandler(async (event) => {
             // --- Wait for both to finish ---
             await Promise.all([oggPromise, imagePromise]);
 
+            // --- Create MongoSong object ---
+            const songId = getSongUUID();
+            // Ensure uploadedFilename is a string
+            let filenameToUse = "file.mp3";
+            console.log(
+              "[upload] Using filename from upload:",
+              uploadedFilename,
+              "or defaulting to file.mp3"
+            );
+            if (
+              typeof uploadedFilename === "string" &&
+              uploadedFilename.trim() !== ""
+            ) {
+              filenameToUse = uploadedFilename;
+            }
+            const title = metadata.common.title || undefined;
+            const artist = metadata.common.artist || undefined;
+            const genre = Array.isArray(metadata.common.genre)
+              ? metadata.common.genre[0]
+              : metadata.common.genre;
+            const valid = Boolean(
+              title &&
+                artist &&
+                genre &&
+                title !== "" &&
+                artist !== "" &&
+                genre !== ""
+            );
+            const mongoSong: MongoSong = {
+              _id: songId,
+              album: metadata.common.album || undefined,
+              artist,
+              date: metadata.common.year || undefined,
+              duration: metadata.format.duration || undefined,
+              filename: filenameToUse,
+              genre,
+              title,
+              tracknumber: metadata.common.track.no || undefined,
+              images: images.length > 0 ? images : undefined,
+              ts_creation: Date.now(),
+              valid,
+              sha1: mp3Sha1,
+              sourceFile:
+                metadata.format.container && metadata.format.codec
+                  ? {
+                      type: metadata.format.container,
+                      extension: path.extname(filenameToUse).replace(".", ""),
+                    }
+                  : undefined,
+            };
+
             // write metadata json
             const record = { mp3: mp3Path, ogg: oggPath, metadata };
             fs.writeFileSync(metaPath, JSON.stringify(record, null, 2));
+            // write song.json
+            const songJsonPath = path.join(tempFolder, "song.json");
+            fs.writeFileSync(songJsonPath, JSON.stringify(mongoSong, null, 2));
             console.log("[upload] Wrote metadata JSON:", metaPath);
+            console.log("[upload] Wrote MongoSong JSON:", songJsonPath);
 
             handled = true;
-            resolve({ tempFolder, record });
+            resolve({ tempFolder, record, mongoSong });
           } catch (err: unknown) {
             const message = err instanceof Error ? err.message : String(err);
             console.log("[upload] Error during upload processing:", message);
@@ -140,6 +224,12 @@ export default defineEventHandler(async (event) => {
         });
       }
     );
+
+    busboy.on("field", (fieldname, val) => {
+      if (fieldname === "filename") {
+        uploadedFilename = val;
+      }
+    });
 
     busboy.on("error", (err: Error) => {
       console.log("[upload] Busboy error:", err);
