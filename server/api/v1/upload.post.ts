@@ -239,13 +239,11 @@ export default defineEventHandler(async (event) => {
               userId: event.context.auth?.userId,
             });
 
-            // write metadata json
-            const record = { mp3: mp3Path, ogg: oggPath, metadata };
-            fs.writeFileSync(metaPath, JSON.stringify(record, null, 2));
-            // write song.json
-            fs.writeFileSync(songJsonPath, JSON.stringify(mongoSong, null, 2));
-            console.log("[upload] Wrote metadata JSON:", metaPath);
-            console.log("[upload] Wrote MongoSong JSON:", songJsonPath);
+            // Insert mongoSong into MongoDB
+            const db = DatabaseService.getInstance();
+            await db.connect();
+            const songsCollection = db.getCollection<MongoSong>("songs");
+            await songsCollection.insertOne(mongoSong);
 
             handled = true;
             resolve({ tempFolder, record, mongoSong });
