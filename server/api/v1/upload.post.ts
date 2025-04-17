@@ -254,3 +254,5 @@ export default defineEventHandler(async (event) => {
     req.pipe(busboy);
   });
 });
+
+export { createTempFolder, getTempFilePaths, validateAndHashMp3, convertMp3ToOgg, extractImages, createMongoSong };
