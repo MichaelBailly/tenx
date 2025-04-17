@@ -93,6 +93,15 @@ export const Config = {
   },
 
   /**
+   * Storage configuration
+   */
+  storage: {
+    tempDir: getEnv("UPLOAD_TEMP_DIR", "audio/temp"),
+    audioDir: getEnv("AUDIO_FILES_DIR", "audio/files"),
+    imageDir: getEnv("IMAGE_FILES_DIR", "audio/images"),
+  },
+
+  /**
    * Protected routes configuration
    */
   routes: {

@@ -4,8 +4,8 @@ import fs from "fs";
 import { createError, defineEventHandler } from "h3";
 import type { IAudioMetadata } from "music-metadata";
 import { parseFile } from "music-metadata";
-import { tmpdir } from "os";
 import path from "path";
+import { Config } from "../../utils/config";
 
 export default defineEventHandler(async (event) => {
   const req = event.node.req;
@@ -29,7 +29,10 @@ export default defineEventHandler(async (event) => {
       "file",
       (fieldname: string, fileStream: NodeJS.ReadableStream) => {
         console.log(`[upload] File field received: ${fieldname}`);
-        const tempFolder = fs.mkdtempSync(path.join(tmpdir(), "upload-"));
+        // Use configured temp directory
+        const tempFolder = fs.mkdtempSync(
+          path.join(Config.storage.tempDir, "upload-")
+        );
         console.log(`[upload] Created temp folder: ${tempFolder}`);
         const mp3Path = path.join(tempFolder, "file.mp3");
         const oggPath = path.join(tempFolder, "file.ogg");
