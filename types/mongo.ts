@@ -71,7 +71,7 @@ export type MongoSong = {
   tokentitle?: string;
   tracknumber?: number;
   images?: {
-    filename?: string;
+    filename: string;
     sha1: string;
     alternatives: Record<string, { width: number; height: number }>;
   }[];

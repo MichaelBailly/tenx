@@ -10,3 +10,7 @@ function uid() {
 export function getSongUUID() {
   return `aa${uid()}`;
 }
+
+export function getImageUUID() {
+  return uid();
+}

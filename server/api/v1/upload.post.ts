@@ -6,9 +6,10 @@ import { createError, defineEventHandler } from "h3";
 import type { IAudioMetadata } from "music-metadata";
 import { parseFile } from "music-metadata";
 import path from "path";
+import { DatabaseService } from "~/server/utils/db";
 import type { MongoSong } from "~/types/mongo";
 import { Config } from "../../utils/config";
-import { getSongUUID } from "../../utils/ids";
+import { getImageUUID, getSongUUID } from "../../utils/ids";
 
 // --- Helper: Temp folder and file management ---
 function createTempFolder(): string {
@@ -77,15 +78,38 @@ async function extractImages(
 ): Promise<MongoSong["images"]> {
   const images: MongoSong["images"] = [];
   if (metadata.common.picture && Array.isArray(metadata.common.picture)) {
+    // Prepare DB access
+    const db = DatabaseService.getInstance();
+    await db.connect();
+    const songsCollection = db.getCollection<MongoSong>("songs");
     for (let i = 0; i < metadata.common.picture.length; i++) {
       const pic = metadata.common.picture[i];
       if (pic && pic.data && pic.format) {
         const ext = pic.format.split("/").pop() || "img";
-        const imgFilename = `cover_${i}.${ext}`;
-        const imgPath = path.join(tempFolder, imgFilename);
-        await fs.promises.writeFile(imgPath, pic.data);
-        const imgBuffer = await fs.promises.readFile(imgPath);
-        const sha1 = crypto.createHash("sha1").update(imgBuffer).digest("hex");
+        // Compute SHA1 for the image
+        const sha1 = crypto.createHash("sha1").update(pic.data).digest("hex");
+        // Try to find an existing image with the same sha1
+        const existing = await songsCollection.findOne({
+          images: { $elemMatch: { sha1 } },
+        });
+        let imgFilename: string;
+        if (existing && existing.images) {
+          // Find the exact image in the array
+          const found = existing.images.find(
+            (img) => img.sha1 === sha1 && img.filename
+          );
+          if (found && found.filename) {
+            imgFilename = found.filename;
+          } else {
+            imgFilename = getImageUUID() + "." + ext;
+            const imgPath = path.join(tempFolder, imgFilename);
+            await fs.promises.writeFile(imgPath, pic.data);
+          }
+        } else {
+          imgFilename = getImageUUID() + "." + ext;
+          const imgPath = path.join(tempFolder, imgFilename);
+          await fs.promises.writeFile(imgPath, pic.data);
+        }
         images.push({ filename: imgFilename, sha1, alternatives: {} });
       }
     }
@@ -99,11 +123,13 @@ function createMongoSong({
   mp3Sha1,
   filenameToUse,
   images,
+  userId,
 }: {
   metadata: IAudioMetadata;
   mp3Sha1: string;
   filenameToUse: string;
   images: MongoSong["images"];
+  userId: string;
 }): MongoSong {
   const songId = getSongUUID();
   const title = metadata.common.title || undefined;
@@ -127,7 +153,9 @@ function createMongoSong({
     images: Array.isArray(images) ? images : undefined,
     ts_creation: Date.now(),
     valid,
+    reviewed: false,
     sha1: mp3Sha1,
+    user: userId,
     sourceFile:
       metadata.format.container && metadata.format.codec
         ? {
@@ -139,6 +167,13 @@ function createMongoSong({
 }
 
 export default defineEventHandler(async (event) => {
+  const userId = event.context.auth?.userId;
+  if (typeof userId !== "string" || userId.trim() === "") {
+    throw createError({
+      statusCode: 401,
+      statusMessage: "Authentication required: userId missing or invalid.",
+    });
+  }
   const req = event.node.req;
   const headers = req.headers;
   if (
@@ -201,6 +236,7 @@ export default defineEventHandler(async (event) => {
               mp3Sha1,
               filenameToUse,
               images,
+              userId: event.context.auth?.userId,
             });
 
             // write metadata json
@@ -254,5 +290,3 @@ export default defineEventHandler(async (event) => {
     req.pipe(busboy);
   });
 });
-
-export { createTempFolder, getTempFilePaths, validateAndHashMp3, convertMp3ToOgg, extractImages, createMongoSong };
