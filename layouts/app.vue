@@ -1,3 +1,4 @@
+git
 <template>
   <div class="flex flex-col min-h-screen bg-gray-900 text-gray-200">
     <!-- Sticky Header with player controls -->
@@ -77,6 +78,14 @@
             <span v-if="user?.username" class="text-gray-400 mr-4">
               Welcome, {{ user.username }}
             </span>
+            <NuxtLink
+              to="/app/upload"
+              class="ml-4 px-4 py-2 border border-transparent rounded-md text-sm font-medium text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400"
+              aria-label="Upload a new song"
+              tabindex="0"
+            >
+              Upload
+            </NuxtLink>
             <button
               class="ml-4 px-4 py-2 border border-transparent rounded-md text-sm font-medium text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400"
               aria-label="Log out"
