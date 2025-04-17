@@ -156,6 +156,7 @@ export default defineEventHandler(async (event) => {
     const busboy = Busboy({ headers });
     let handled = false;
     let uploadedFilename: string | undefined;
+    let fileProcessingPromise: Promise<void> | null = null;
 
     busboy.on(
       "file",
@@ -171,20 +172,22 @@ export default defineEventHandler(async (event) => {
         const { mp3Path, oggPath, metaPath, songJsonPath } =
           getTempFilePaths(tempFolder);
 
-        const mp3Write = fs.createWriteStream(mp3Path);
-        fileStream.pipe(mp3Write);
-        console.log(`[upload] Streaming file to: ${mp3Path}`);
-
-        mp3Write.on("finish", async () => {
-          console.log("[upload] Finished writing MP3 file");
+        fileProcessingPromise = (async () => {
           try {
+            await new Promise<void>((res, rej) => {
+              const mp3Write = fs.createWriteStream(mp3Path);
+              fileStream.pipe(mp3Write);
+              mp3Write.on("finish", res);
+              fileStream.on("error", rej);
+              mp3Write.on("error", rej);
+            });
+            console.log("[upload] Finished writing MP3 file");
+
             const { metadata, sha1: mp3Sha1 } = await validateAndHashMp3(
               mp3Path
             );
-            const oggPromise = convertMp3ToOgg(mp3Path, oggPath);
-            const imagePromise = extractImages(metadata, tempFolder);
-            const images = await imagePromise;
-            await oggPromise;
+            await convertMp3ToOgg(mp3Path, oggPath);
+            const images = await extractImages(metadata, tempFolder);
 
             let filenameToUse = "file.mp3";
             if (
@@ -213,17 +216,10 @@ export default defineEventHandler(async (event) => {
           } catch (err: unknown) {
             const message = err instanceof Error ? err.message : String(err);
             console.log("[upload] Error during upload processing:", message);
-            reject(createError({ statusCode: 400, statusMessage: message }));
+            if (!handled)
+              reject(createError({ statusCode: 400, statusMessage: message }));
           }
-        });
-
-        fileStream.on("error", (err: Error) => {
-          console.log("[upload] File stream error:", err);
-          if (!handled)
-            reject(
-              createError({ statusCode: 500, statusMessage: err.message })
-            );
-        });
+        })();
       }
     );
 
@@ -235,11 +231,24 @@ export default defineEventHandler(async (event) => {
 
     busboy.on("error", (err: Error) => {
       console.log("[upload] Busboy error:", err);
-      reject(createError({ statusCode: 500, statusMessage: err.message }));
+      if (!handled)
+        reject(createError({ statusCode: 500, statusMessage: err.message }));
     });
 
-    busboy.on("finish", () => {
+    busboy.on("finish", async () => {
       console.log("[upload] Busboy finished parsing");
+      if (fileProcessingPromise) {
+        try {
+          await fileProcessingPromise;
+        } catch (err) {
+          console.log(err);
+          // Already handled in fileProcessingPromise
+        }
+      } else if (!handled) {
+        reject(
+          createError({ statusCode: 400, statusMessage: "No file uploaded" })
+        );
+      }
     });
 
     req.pipe(busboy);
