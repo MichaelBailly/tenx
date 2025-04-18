@@ -24,3 +24,8 @@ test-results
 .env
 .env.*
 !.env.example
+
+# tenx specific files
+audio/temp
+audio/files
+audio/images
