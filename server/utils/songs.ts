@@ -96,11 +96,12 @@ export function tokenizeSong(doc: SongDocument): TokenizedSongResult {
 
   // Remove duplicates
   const uniqueArtists: string[] = [];
-  for (const artist of finalArtists) {
+  for (const ntArtist of finalArtists) {
+    const artist = ntArtist.trim();
     if (!uniqueArtists.includes(artist)) {
       uniqueArtists.push(artist);
     }
   }
 
-  return { title: realTitle, artists: uniqueArtists };
+  return { title: realTitle.trim(), artists: uniqueArtists };
 }

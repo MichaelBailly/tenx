@@ -29,6 +29,38 @@ function getTempFilePaths(tempFolder: string) {
   };
 }
 
+async function moveSongFilesToPermanentLocation(
+  files: string[],
+  songId: string
+) {
+  const audioDir = Config.storage.audioDir;
+  const subdir = songId.substring(2, 3);
+  const destDir = path.join(audioDir, subdir);
+  await fs.promises.mkdir(destDir, { recursive: true });
+  for (const file of files) {
+    // find file extension
+    const ext = path.extname(file);
+    const newFilePath = path.join(destDir, songId + ext);
+    await fs.promises.rename(file, newFilePath);
+  }
+}
+
+async function moveImageFilesToPermanentLocation(
+  images: MongoSong["images"],
+  tempFolder: string
+) {
+  if (!images || images.length === 0) {
+    return;
+  }
+  const imageDir = Config.storage.imageDir;
+  await fs.promises.mkdir(imageDir, { recursive: true });
+  for (const img of images) {
+    const imgPath = path.join(tempFolder, img.filename);
+    const newImgPath = path.join(imageDir, img.filename);
+    await fs.promises.rename(imgPath, newImgPath);
+  }
+}
+
 // --- Helper: MP3 validation and SHA1 calculation ---
 async function validateAndHashMp3(
   mp3Path: string
@@ -46,7 +78,7 @@ async function validateAndHashMp3(
 function convertMp3ToOgg(mp3Path: string, oggPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const lameProc = spawn("lame", ["--silent", "--decode", mp3Path, "-"]);
-    const oggencProc = spawn("oggenc", ["-Q", "-", "-o", oggPath]);
+    const oggencProc = spawn("oggenc", ["-Q", "-q", "10", "-", "-o", oggPath]);
     lameProc.stdout.pipe(oggencProc.stdin);
     lameProc.stderr.on("data", (data) => {
       console.log("[upload] lame stderr:", data.toString());
@@ -76,8 +108,12 @@ function convertMp3ToOgg(mp3Path: string, oggPath: string): Promise<void> {
 async function extractImages(
   metadata: IAudioMetadata,
   tempFolder: string
-): Promise<MongoSong["images"]> {
+): Promise<{
+  newImages: MongoSong["images"];
+  duplicatedImages: MongoSong["images"];
+}> {
   const images: MongoSong["images"] = [];
+  const duplicatedImages: MongoSong["images"] = [];
   if (metadata.common.picture && Array.isArray(metadata.common.picture)) {
     // Prepare DB access
     const db = DatabaseService.getInstance();
@@ -93,29 +129,26 @@ async function extractImages(
         const existing = await songsCollection.findOne({
           images: { $elemMatch: { sha1 } },
         });
-        let imgFilename: string;
         if (existing && existing.images) {
           // Find the exact image in the array
           const found = existing.images.find(
             (img) => img.sha1 === sha1 && img.filename
           );
-          if (found && found.filename) {
-            imgFilename = found.filename;
-          } else {
-            imgFilename = getImageUUID() + "." + ext;
-            const imgPath = path.join(tempFolder, imgFilename);
-            await fs.promises.writeFile(imgPath, pic.data);
+          if (found) {
+            duplicatedImages.push(found);
+            continue;
           }
-        } else {
-          imgFilename = getImageUUID() + "." + ext;
-          const imgPath = path.join(tempFolder, imgFilename);
-          await fs.promises.writeFile(imgPath, pic.data);
         }
+
+        const imgFilename = getImageUUID() + "." + ext;
+        const imgPath = path.join(tempFolder, imgFilename);
+        await fs.promises.writeFile(imgPath, pic.data);
+
         images.push({ filename: imgFilename, sha1, alternatives: {} });
       }
     }
   }
-  return images;
+  return { newImages: images, duplicatedImages };
 }
 
 // --- Helper: MongoSong creation ---
@@ -253,13 +286,29 @@ export default defineEventHandler(async (event) => {
             ) {
               filenameToUse = uploadedFilename;
             }
+
             const mongoSong = createMongoSong({
               metadata,
               mp3Sha1,
               filenameToUse,
-              images,
+              images:
+                (images.newImages || []).concat(
+                  images.duplicatedImages || []
+                ) || [],
               userId: event.context.auth?.userId,
             });
+
+            // Move the files to their permanent location
+            await moveSongFilesToPermanentLocation(
+              [mp3Path, oggPath],
+              mongoSong._id
+            );
+
+            // Move images to their permanent location
+            await moveImageFilesToPermanentLocation(
+              images.newImages,
+              tempFolder
+            );
 
             // Insert mongoSong into MongoDB
             await songsCollection.insertOne(mongoSong);
