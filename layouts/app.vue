@@ -74,9 +74,6 @@
           </div>
 
           <div class="flex items-center">
-            <span v-if="user?.username" class="text-gray-400 mr-4">
-              Welcome, {{ user.username }}
-            </span>
             <NuxtLink
               to="/app/upload"
               class="ml-4 px-4 py-2 border border-transparent rounded-md text-sm font-medium text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 relative"
