@@ -21,7 +21,6 @@ const {
   changePage,
   changeSort,
   changeLimit,
-  formatDuration,
   editSong,
   cancelEditing,
   saveSong,
@@ -91,139 +90,92 @@ const handleSaveSong = async (song: ApiSong) => {
 
       <!-- Songs table -->
       <div v-else>
-        <div
-          class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700"
-        >
-          <table class="min-w-full divide-y divide-gray-700">
-            <thead class="bg-gray-900">
-              <tr>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
-                >
-                  Actions
-                </th>
-                <th
-                  scope="col"
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
-                >
-                  <button
-                    class="group flex items-center focus:outline-none focus:text-yellow-400"
-                    tabindex="0"
-                    aria-label="Sort by title"
-                    @click="changeSort('title')"
+        <div class="flex flex-col gap-4">
+          <!-- Custom review table -->
+          <div
+            class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700"
+          >
+            <table class="min-w-full divide-y divide-gray-700">
+              <thead class="bg-gray-900">
+                <tr>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
                   >
-                    Title
-                    {{
-                      reviewSongsState.sortField === "title"
-                        ? reviewSongsState.sortDirection === "asc"
-                          ? "↑"
-                          : "↓"
-                        : ""
-                    }}
-                  </button>
-                </th>
-                <th
-                  scope="col"
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
+                    Actions
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
+                  >
+                    <button
+                      class="group flex items-center focus:outline-none focus:text-yellow-400"
+                      tabindex="0"
+                      aria-label="Sort by title"
+                      @click="changeSort('title')"
+                    >
+                      Title
+                      {{
+                        reviewSongsState.sortField === "title"
+                          ? reviewSongsState.sortDirection === "asc"
+                            ? "↑"
+                            : "↓"
+                          : ""
+                      }}
+                    </button>
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
+                  >
+                    <button
+                      class="group flex items-center focus:outline-none focus:text-yellow-400"
+                      tabindex="0"
+                      aria-label="Sort by uploaded date"
+                      @click="changeSort('ts_creation')"
+                    >
+                      Uploaded
+                      {{
+                        reviewSongsState.sortField === "ts_creation"
+                          ? reviewSongsState.sortDirection === "asc"
+                            ? "↑"
+                            : "↓"
+                          : ""
+                      }}
+                    </button>
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-gray-800 divide-y divide-gray-700">
+                <tr
+                  v-for="song in reviewSongsState.songs"
+                  :key="song._id"
+                  class="hover:bg-gray-700 transition-colors"
                 >
-                  <button
-                    class="group flex items-center focus:outline-none focus:text-yellow-400"
-                    tabindex="0"
-                    aria-label="Sort by artist"
-                    @click="changeSort('artist')"
-                  >
-                    Artist
-                    {{
-                      reviewSongsState.sortField === "artist"
-                        ? reviewSongsState.sortDirection === "asc"
-                          ? "↑"
-                          : "↓"
-                        : ""
-                    }}
-                  </button>
-                </th>
-                <th
-                  scope="col"
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
-                >
-                  <button
-                    class="group flex items-center focus:outline-none focus:text-yellow-400"
-                    tabindex="0"
-                    aria-label="Sort by uploaded date"
-                    @click="changeSort('ts_creation')"
-                  >
-                    Uploaded
-                    {{
-                      reviewSongsState.sortField === "ts_creation"
-                        ? reviewSongsState.sortDirection === "asc"
-                          ? "↑"
-                          : "↓"
-                        : ""
-                    }}
-                  </button>
-                </th>
-                <th
-                  scope="col"
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
-                >
-                  <button
-                    class="group flex items-center focus:outline-none focus:text-yellow-400"
-                    tabindex="0"
-                    aria-label="Sort by duration"
-                    @click="changeSort('duration')"
-                  >
-                    Duration
-                    {{
-                      reviewSongsState.sortField === "duration"
-                        ? reviewSongsState.sortDirection === "asc"
-                          ? "↑"
-                          : "↓"
-                        : ""
-                    }}
-                  </button>
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-gray-800 divide-y divide-gray-700">
-              <tr
-                v-for="song in reviewSongsState.songs"
-                :key="song._id"
-                class="hover:bg-gray-700 transition-colors"
-              >
-                <!-- Actions column -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <button
-                    class="text-yellow-400 hover:text-yellow-300 bg-gray-700 px-3 py-1 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                    @click="editSong(song)"
-                  >
-                    Review
-                  </button>
-                </td>
+                  <!-- Actions column -->
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <button
+                      class="text-yellow-400 hover:text-yellow-300 bg-gray-700 px-3 py-1 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                      @click="editSong(song)"
+                    >
+                      Review
+                    </button>
+                  </td>
 
-                <!-- Title column -->
-                <td
-                  class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-200"
-                >
-                  {{ song.title || "Untitled" }}
-                </td>
+                  <!-- Title column -->
+                  <td
+                    class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-200"
+                  >
+                    {{ song.title || "Untitled" }}
+                  </td>
 
-                <!-- Artist column -->
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                  {{ song.artist || "Unknown Artist" }}
-                </td>
-
-                <!-- Upload date column -->
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                  {{ new Date(song.ts_creation).toLocaleDateString() }}
-                </td>
-
-                <!-- Duration column -->
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                  {{ formatDuration(song.duration) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  <!-- Upload date column -->
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                    {{ new Date(song.ts_creation).toLocaleDateString() }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- Pagination -->
