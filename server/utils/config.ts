@@ -108,7 +108,7 @@ export const Config = {
     /**
      * Routes that require authentication
      */
-    protected: ["/app", "/api"],
+    protected: ["/app", "/api", "/audio"],
 
     /**
      * Routes that don't require authentication
