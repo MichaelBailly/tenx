@@ -1,17 +1,9 @@
 <script setup lang="ts">
 import { NuxtLink } from "#components";
-
-interface Song {
-  _id: string;
-  title: string;
-  artist: string;
-  tokenartists: string[];
-  album: string;
-  duration: number;
-}
+import type { ApiSong } from "~/types/api";
 
 const props = defineProps<{
-  songs: Song[];
+  songs: ApiSong[];
   sortField: string;
   sortDirection: string;
   formatDuration: (duration: number) => string;
@@ -19,7 +11,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "sort", field: string): void;
-  (e: "play", song: Song): void;
+  (e: "play", song: ApiSong): void;
 }>();
 
 const getSortIndicator = (field: string) => {
@@ -31,6 +23,15 @@ const handleSortKeyDown = (e: KeyboardEvent, field: string) => {
   if (e.key === "Enter" || e.key === " ") {
     e.preventDefault();
     emit("sort", field);
+  }
+};
+
+// Handle drag start event for songs (to drag to player queue)
+const handleDragStart = (e: DragEvent, song: ApiSong) => {
+  if (e.dataTransfer) {
+    // Convert the song object to JSON string and set as data
+    e.dataTransfer.setData("application/json", JSON.stringify(song));
+    e.dataTransfer.effectAllowed = "copy";
   }
 };
 </script>
@@ -102,6 +103,8 @@ const handleSortKeyDown = (e: KeyboardEvent, field: string) => {
           v-for="song in props.songs"
           :key="song._id"
           class="hover:bg-gray-700 cursor-pointer transition-colors"
+          draggable="true"
+          @dragstart="(e) => handleDragStart(e, song)"
         >
           <td class="px-6 py-4 whitespace-nowrap">
             <button
@@ -135,10 +138,6 @@ const handleSortKeyDown = (e: KeyboardEvent, field: string) => {
           <td
             class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-200"
             tabindex="0"
-            role="button"
-            :aria-label="`Play ${song.title}`"
-            @click="emit('play', song)"
-            @keydown.enter="emit('play', song)"
           >
             {{ song.title }}
           </td>
@@ -164,35 +163,19 @@ const handleSortKeyDown = (e: KeyboardEvent, field: string) => {
                 <span v-if="index < song.tokenartists.length - 1">, </span>
               </template>
             </div>
-            <span
-              v-else
-              tabindex="0"
-              role="button"
-              @click="emit('play', song)"
-              @keydown.enter="emit('play', song)"
-            >
+            <span v-else tabindex="0">
               {{ song.artist }}
             </span>
           </td>
           <td
             class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"
             tabindex="0"
-            role="button"
-            :aria-label="`Play ${song.title} from album ${song.album}`"
-            @click="emit('play', song)"
-            @keydown.enter="emit('play', song)"
           >
             {{ song.album }}
           </td>
           <td
             class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"
             tabindex="0"
-            role="button"
-            :aria-label="`Play ${song.title}, duration: ${props.formatDuration(
-              song.duration
-            )}`"
-            @click="emit('play', song)"
-            @keydown.enter="emit('play', song)"
           >
             {{ props.formatDuration(song.duration) }}
           </td>

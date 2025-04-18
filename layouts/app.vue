@@ -121,36 +121,7 @@
       <aside
         class="w-80 bg-gray-800 border-l border-gray-700 fixed right-0 top-20 bottom-0 overflow-y-auto"
       >
-        <div class="p-4">
-          <h2 class="text-lg font-medium text-yellow-400">Playlist</h2>
-          <p class="text-sm text-gray-400 mt-2">
-            Your playlist will appear here
-          </p>
-
-          <!-- Sample Playlist -->
-          <div class="mt-4 space-y-2">
-            <div
-              class="flex items-center p-2 rounded-md bg-gray-700 text-white"
-            >
-              <span class="flex-1 truncate">Currently Playing</span>
-              <span class="text-xs text-gray-400">3:29</span>
-            </div>
-            <div
-              v-for="i in 5"
-              :key="i"
-              class="flex items-center p-2 rounded-md hover:bg-gray-700"
-            >
-              <span class="flex-1 truncate">Track {{ i }}</span>
-              <span class="text-xs text-gray-400"
-                >{{ Math.floor(Math.random() * 4) + 1 }}:{{
-                  Math.floor(Math.random() * 60)
-                    .toString()
-                    .padStart(2, "0")
-                }}</span
-              >
-            </div>
-          </div>
-        </div>
+        <PlayerQueue />
       </aside>
     </div>
 
@@ -171,6 +142,8 @@ import { onMounted, onUnmounted } from "vue";
 import { useAuth } from "~/composables/useAuth";
 // Use the review songs composable
 import { useReviewSongs } from "~/composables/useReviewSongs";
+// Import the PlayerQueue component
+import PlayerQueue from "~/components/player/PlayerQueue.vue";
 
 const { logout } = useAuth();
 const { reviewSongsState, fetchReviewSongs } = useReviewSongs();
