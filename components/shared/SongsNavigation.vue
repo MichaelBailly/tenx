@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Define props to make the component reusable across different pages
 defineProps<{
-  activePage: "songs" | "artists" | "albums" | "recent";
+  activePage: "songs" | "artists" | "albums" | "recent" | "review";
 }>();
 </script>
 
@@ -29,6 +29,17 @@ defineProps<{
         ]"
       >
         By Artist
+      </NuxtLink>
+      <NuxtLink
+        to="/app/review"
+        :class="[
+          'pb-2 px-1 font-medium',
+          activePage === 'review'
+            ? 'text-yellow-400 border-b-2 border-yellow-400'
+            : 'text-gray-400 hover:text-gray-300',
+        ]"
+      >
+        Review
       </NuxtLink>
       <button
         class="text-gray-400 hover:text-gray-300 pb-2 px-1 font-medium"
