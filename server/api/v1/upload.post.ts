@@ -13,6 +13,11 @@ import { Config } from "../../utils/config";
 import { getImageUUID, getSongUUID } from "../../utils/ids";
 
 // --- Helper: Temp folder and file management ---
+
+/**
+ * Creates a temporary folder for storing uploaded files during processing.
+ * @returns {string} The path to the created temporary folder.
+ */
 function createTempFolder(): string {
   const tempFolder = fs.mkdtempSync(
     path.join(Config.storage.tempDir, "upload-")
@@ -20,6 +25,10 @@ function createTempFolder(): string {
   return tempFolder;
 }
 
+/**
+ * Returns the paths for temporary files (mp3, ogg, metadata, song json) in the given temp folder.
+ * @param tempFolder The temporary folder path.
+ */
 function getTempFilePaths(tempFolder: string) {
   return {
     mp3Path: path.join(tempFolder, "file.mp3"),
@@ -29,6 +38,11 @@ function getTempFilePaths(tempFolder: string) {
   };
 }
 
+/**
+ * Moves song files (mp3, ogg) from the temp folder to their permanent storage location.
+ * @param files Array of file paths to move.
+ * @param songId The unique song ID used for naming and subdirectory.
+ */
 async function moveSongFilesToPermanentLocation(
   files: string[],
   songId: string
@@ -45,6 +59,11 @@ async function moveSongFilesToPermanentLocation(
   }
 }
 
+/**
+ * Moves new image files from the temp folder to the permanent image directory.
+ * @param images Array of image metadata objects.
+ * @param tempFolder The temporary folder path.
+ */
 async function moveImageFilesToPermanentLocation(
   images: MongoSong["images"],
   tempFolder: string
@@ -62,6 +81,13 @@ async function moveImageFilesToPermanentLocation(
 }
 
 // --- Helper: MP3 validation and SHA1 calculation ---
+
+/**
+ * Validates that the uploaded file is a valid MP3 and calculates its SHA1 hash.
+ * @param mp3Path Path to the uploaded MP3 file.
+ * @returns Metadata and SHA1 hash of the file.
+ * @throws If the file is not a valid MP3.
+ */
 async function validateAndHashMp3(
   mp3Path: string
 ): Promise<{ metadata: IAudioMetadata; sha1: string }> {
@@ -75,6 +101,13 @@ async function validateAndHashMp3(
 }
 
 // --- Helper: OGG conversion ---
+
+/**
+ * Converts an MP3 file to OGG format using lame and oggenc.
+ * @param mp3Path Path to the source MP3 file.
+ * @param oggPath Path to the output OGG file.
+ * @returns Promise that resolves when conversion is complete.
+ */
 function convertMp3ToOgg(mp3Path: string, oggPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const lameProc = spawn("lame", ["--silent", "--decode", mp3Path, "-"]);
@@ -105,6 +138,13 @@ function convertMp3ToOgg(mp3Path: string, oggPath: string): Promise<void> {
 }
 
 // --- Helper: Image extraction ---
+
+/**
+ * Extracts embedded images from MP3 metadata, deduplicates them, and writes new images to disk.
+ * @param metadata The audio metadata containing possible images.
+ * @param tempFolder The temporary folder to write new images.
+ * @returns Object with arrays of new and duplicated images.
+ */
 async function extractImages(
   metadata: IAudioMetadata,
   tempFolder: string
@@ -152,6 +192,12 @@ async function extractImages(
 }
 
 // --- Helper: MongoSong creation ---
+
+/**
+ * Creates a MongoSong object from metadata, file info, and user info.
+ * @param params Object containing metadata, SHA1, filename, images, and userId.
+ * @returns MongoSong object ready for insertion into MongoDB.
+ */
 function createMongoSong({
   metadata,
   mp3Sha1,
@@ -204,6 +250,10 @@ function createMongoSong({
   };
 }
 
+/**
+ * Handles the upload POST request, processes the uploaded MP3, extracts metadata and images,
+ * converts to OGG, stores files and metadata, and inserts the song into MongoDB.
+ */
 export default defineEventHandler(async (event) => {
   const userId = event.context.auth?.userId;
   if (typeof userId !== "string" || userId.trim() === "") {
@@ -245,6 +295,24 @@ export default defineEventHandler(async (event) => {
         const { mp3Path, oggPath } = getTempFilePaths(tempFolder);
 
         fileProcessingPromise = (async () => {
+          let cleanupDone = false;
+          const cleanup = async () => {
+            if (!cleanupDone) {
+              cleanupDone = true;
+              try {
+                await fs.promises.rm(tempFolder, {
+                  recursive: true,
+                  force: true,
+                });
+                console.log(`[upload] Cleaned up temp folder: ${tempFolder}`);
+              } catch (e) {
+                console.log(
+                  `[upload] Failed to clean up temp folder: ${tempFolder}`,
+                  e
+                );
+              }
+            }
+          };
           try {
             await new Promise<void>((res, rej) => {
               const mp3Write = fs.createWriteStream(mp3Path);
@@ -267,6 +335,7 @@ export default defineEventHandler(async (event) => {
               sha1: mp3Sha1,
             });
             if (existingSong) {
+              await cleanup();
               throw createError({
                 statusCode: 409,
                 statusMessage:
@@ -315,9 +384,11 @@ export default defineEventHandler(async (event) => {
 
             handled = true;
             resolve({ tempFolder, mongoSong });
+            await cleanup(); // Clean up temp folder after success
           } catch (err: unknown) {
             const message = err instanceof Error ? err.message : String(err);
             console.log("[upload] Error during upload processing:", message);
+            await cleanup(); // Clean up temp folder on error
             if (!handled)
               reject(createError({ statusCode: 400, statusMessage: message }));
           }
