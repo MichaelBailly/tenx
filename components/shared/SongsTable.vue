@@ -14,7 +14,6 @@ const props = defineProps<{
   songs: Song[];
   sortField: string;
   sortDirection: string;
-  isSongPlaying: (song: Song) => boolean;
   formatDuration: (duration: number) => string;
 }>();
 
@@ -102,13 +101,11 @@ const handleSortKeyDown = (e: KeyboardEvent, field: string) => {
         <tr
           v-for="song in props.songs"
           :key="song._id"
-          :class="{ 'bg-yellow-900/30': props.isSongPlaying(song) }"
           class="hover:bg-gray-700 cursor-pointer transition-colors"
         >
           <td class="px-6 py-4 whitespace-nowrap">
             <button
               class="text-yellow-400 hover:text-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 rounded-full p-1"
-              :aria-label="props.isSongPlaying(song) ? 'Now playing' : 'Play'"
               tabindex="0"
               @click="emit('play', song)"
               @keydown.enter="emit('play', song)"
@@ -116,27 +113,17 @@ const handleSortKeyDown = (e: KeyboardEvent, field: string) => {
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="h-5 w-5"
-                :class="{ 'text-yellow-400': props.isSongPlaying(song) }"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
                 <path
-                  v-if="props.isSongPlaying(song)"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-                <path
-                  v-if="!props.isSongPlaying(song)"
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
                   d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
                 />
                 <path
-                  v-if="!props.isSongPlaying(song)"
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"

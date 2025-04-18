@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import SongsNavigation from "~/components/shared/SongsNavigation.vue";
 import Pagination from "~/components/ui/Pagination.vue";
 
 // Define page meta to use our app layout
@@ -49,27 +50,7 @@ const handleLimitChange = (event: Event) => {
 <template>
   <div>
     <!-- Tab Navigation -->
-    <div class="mb-4 border-b border-gray-700">
-      <div class="flex space-x-4">
-        <NuxtLink
-          to="/app/songs"
-          class="text-gray-400 hover:text-gray-300 pb-2 px-1 font-medium"
-        >
-          All Songs
-        </NuxtLink>
-        <button
-          class="text-yellow-400 border-b-2 border-yellow-400 pb-2 px-1 font-medium"
-        >
-          By Artist
-        </button>
-        <button class="text-gray-400 hover:text-gray-300 pb-2 px-1 font-medium">
-          By Album
-        </button>
-        <button class="text-gray-400 hover:text-gray-300 pb-2 px-1 font-medium">
-          Recent
-        </button>
-      </div>
-    </div>
+    <SongsNavigation active-page="artists" />
 
     <h1 class="text-2xl font-bold text-yellow-400 mb-6">Artists</h1>
 

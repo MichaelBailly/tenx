@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import SongSearch from "~/components/shared/SongSearch.vue";
+import SongsEmptyState from "~/components/shared/SongsEmptyState.vue";
+import SongsErrorState from "~/components/shared/SongsErrorState.vue";
+import SongsLoadingState from "~/components/shared/SongsLoadingState.vue";
+import SongsNavigation from "~/components/shared/SongsNavigation.vue";
+import SongsTable from "~/components/shared/SongsTable.vue";
 import Pagination from "~/components/ui/Pagination.vue";
 import { useSongs } from "~/composables/useSongs";
-import SongSearch from "~/components/shared/SongSearch.vue";
-import SongsTable from "~/components/shared/SongsTable.vue";
-import SongsNavigation from "~/components/shared/SongsNavigation.vue";
-import SongsLoadingState from "~/components/shared/SongsLoadingState.vue";
-import SongsErrorState from "~/components/shared/SongsErrorState.vue";
-import SongsEmptyState from "~/components/shared/SongsEmptyState.vue";
 
 // Define page meta to use our app layout
 definePageMeta({
@@ -20,9 +20,7 @@ const {
   changePage,
   changeSort,
   changeLimit,
-  playSong,
   formatDuration,
-  isSongPlaying,
   searchTerm,
   changeSearch,
 } = await useSongs();
@@ -47,19 +45,26 @@ const handleLimitChange = (event: Event) => {
 <template>
   <div>
     <!-- Tab Navigation -->
-    <SongsNavigation />
+    <SongsNavigation active-page="songs" />
 
     <!-- Title and Search with icon toggling search input -->
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold text-yellow-400">My Songs</h1>
-      <SongSearch :model-value="searchTerm" @update:modelValue="changeSearch" />
+      <SongSearch
+        :model-value="searchTerm"
+        @update:model-value="changeSearch"
+      />
     </div>
 
     <!-- Loading state -->
     <SongsLoadingState v-if="isLoading && !hasSongs" />
 
     <!-- Error state -->
-    <SongsErrorState v-else-if="hasError" :error="songsState.error" @retry="handleRetry" />
+    <SongsErrorState
+      v-else-if="hasError"
+      :error="songsState.error"
+      @retry="handleRetry"
+    />
 
     <!-- Empty state -->
     <SongsEmptyState v-else-if="!hasSongs" />
@@ -70,10 +75,8 @@ const handleLimitChange = (event: Event) => {
       :songs="songsState.songs"
       :sort-field="songsState.sortField"
       :sort-direction="songsState.sortDirection"
-      :is-song-playing="isSongPlaying"
       :format-duration="formatDuration"
       @sort="changeSort"
-      @play="playSong"
     />
 
     <!-- Pagination -->

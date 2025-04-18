@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
+import SongsNavigation from "~/components/shared/SongsNavigation.vue";
 import Pagination from "~/components/ui/Pagination.vue";
+import type { ApiSong } from "~/types/api";
 
 // Define page meta to use our app layout
 definePageMeta({
@@ -86,7 +88,7 @@ const songsByAlbum = computed(() => {
 
   // Sort each album's songs by track number
   for (const [_album, songs] of albumMap.entries()) {
-    songs.sort((a, b) => a.tracknumber - b.tracknumber);
+    songs.sort((a: ApiSong, b: ApiSong) => a.tracknumber - b.tracknumber);
   }
 
   // Sort no album songs by title
@@ -156,7 +158,7 @@ const goBackToArtists = () => {
 
     if (queryParamsMatch) {
       // Parse the query parameters from the URL
-      const queryParams = {};
+      const queryParams: Record<string, string> = {};
       const searchParams = new URLSearchParams(queryParamsMatch[1]);
 
       for (const [key, value] of searchParams.entries()) {
@@ -180,36 +182,15 @@ const goBackToArtists = () => {
 <template>
   <div>
     <!-- Tab Navigation -->
-    <div class="mb-4 border-b border-gray-700">
-      <div class="flex space-x-4">
-        <NuxtLink
-          to="/app/songs"
-          class="text-gray-400 hover:text-gray-300 pb-2 px-1 font-medium"
-        >
-          All Songs
-        </NuxtLink>
-        <NuxtLink
-          to="/app/artists"
-          class="text-yellow-400 border-b-2 border-yellow-400 pb-2 px-1 font-medium"
-        >
-          By Artist
-        </NuxtLink>
-        <button class="text-gray-400 hover:text-gray-300 pb-2 px-1 font-medium">
-          By Album
-        </button>
-        <button class="text-gray-400 hover:text-gray-300 pb-2 px-1 font-medium">
-          Recent
-        </button>
-      </div>
-    </div>
+    <SongsNavigation active-page="artists" />
 
     <!-- Back button and Artist Name -->
     <div class="flex items-center mb-6">
       <button
         class="text-yellow-400 hover:text-yellow-300 p-1 rounded focus:outline-none focus:ring-2 focus:ring-yellow-500"
-        @click="goBackToArtists"
         title="Back to Artists"
         aria-label="Back to Artists"
+        @click="goBackToArtists"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

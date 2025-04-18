@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const _props = defineProps<{ error: string }>();
+const _props = defineProps<{ error: string | null }>();
 const emit = defineEmits<{ (e: "retry"): void }>();
 
 function handleRetry() {
