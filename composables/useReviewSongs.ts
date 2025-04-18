@@ -1,7 +1,6 @@
-import { useFetch } from "#app";
-import { computed, reactive, ref } from "vue";
+import { useRoute, useRouter } from "#app";
+import { computed, onMounted, reactive, ref } from "vue";
 import type { ApiSong } from "~/types/api";
-import type { ApiError } from "~/types/common";
 import type { SongsApiResponse, SongsState } from "~/types/songs";
 
 // Create a store for review songs state
@@ -95,68 +94,65 @@ export function useReviewSongs() {
         sort,
       };
 
-      // Use Nuxt's useFetch to call the review API
-      const { data, error } = await useFetch<SongsApiResponse>(
-        "/api/v1/review",
-        {
+      console.log("Fetching review songs with params:", query);
+
+      // Using $fetch directly instead of useFetch for more direct control
+      const url = `/api/v1/review?${new URLSearchParams(query).toString()}`;
+      console.log("API URL:", url);
+
+      try {
+        // Make the direct fetch call with proper options
+        const response = await $fetch<SongsApiResponse>(url, {
           method: "GET",
-          params: query,
-        }
-      );
+          credentials: "include",
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+          },
+        });
 
-      // Handle error response
-      if (error.value) {
-        const errorData = error.value.data as ApiError;
+        console.log("Raw API response:", response);
 
-        // Handle the specific case of page out of range
-        if (
-          errorData?.code === "PAGE_OUT_OF_RANGE" &&
-          errorData?.data?.totalPages
-        ) {
-          console.warn(
-            `Page ${page} is out of range. Redirecting to last page ${errorData.data.totalPages}`
+        // Process the response data
+        if (!response || !response.success || !response.data) {
+          console.log("Invalid response format:", response);
+          throw new Error(
+            response?.error || "Failed to fetch songs: Invalid response format"
           );
-
-          // Update state with the last available page
-          reviewSongsState.totalPages = errorData.data.totalPages;
-          reviewSongsState.totalSongs = errorData.data.totalSongs || 0;
-
-          // Redirect to the last available page
-          return fetchReviewSongs(errorData.data.totalPages, limit, sort);
         }
 
-        throw new Error(
-          errorData?.error || `Failed to fetch songs: ${error.value.message}`
-        );
+        const responseData = response.data;
+
+        // Validate response data shape
+        if (!responseData.songs || !responseData.pagination) {
+          console.log("Missing required fields in response:", responseData);
+          throw new Error(
+            "Unexpected API response format: missing required fields"
+          );
+        }
+
+        // Update state with response data
+        reviewSongsState.songs = responseData.songs;
+        reviewSongsState.currentPage = responseData.pagination.page;
+        reviewSongsState.totalPages = responseData.pagination.pages;
+        reviewSongsState.totalSongs = responseData.pagination.total;
+        reviewSongsState.limit = responseData.pagination.limit;
+
+        // Update URL to reflect current state
+        updateURL(page, limit, sort);
+
+        return responseData.songs;
+      } catch (fetchError) {
+        console.error("Fetch error:", fetchError);
+        throw fetchError;
       }
-
-      // Make sure we have data
-      if (!data.value?.success || !data.value.data) {
-        throw new Error(data.value?.error || "Failed to fetch songs");
-      }
-
-      const responseData = data.value.data;
-
-      // Validate response data shape
-      if (!responseData.songs || !responseData.pagination) {
-        throw new Error("Unexpected API response format");
-      }
-
-      // Update state with response data
-      reviewSongsState.songs = responseData.songs;
-      reviewSongsState.currentPage = responseData.pagination.page;
-      reviewSongsState.totalPages = responseData.pagination.pages;
-      reviewSongsState.totalSongs = responseData.pagination.total;
-      reviewSongsState.limit = responseData.pagination.limit;
-
-      // Update URL to reflect current state
-      updateURL(page, limit, sort);
-
-      return responseData.songs;
     } catch (error) {
       reviewSongsState.error =
         error instanceof Error ? error.message : "An error occurred";
       console.error("Error fetching songs for review:", error);
+
+      // Set a default value for totalSongs in case of error
+      reviewSongsState.totalSongs = 0;
       return [];
     } finally {
       reviewSongsState.loading = false;

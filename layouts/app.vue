@@ -1,4 +1,3 @@
-git
 <template>
   <div class="flex flex-col min-h-screen bg-gray-900 text-gray-200">
     <!-- Sticky Header with player controls -->
@@ -80,11 +79,21 @@ git
             </span>
             <NuxtLink
               to="/app/upload"
-              class="ml-4 px-4 py-2 border border-transparent rounded-md text-sm font-medium text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400"
+              class="ml-4 px-4 py-2 border border-transparent rounded-md text-sm font-medium text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 relative"
               aria-label="Upload a new song"
               tabindex="0"
             >
               Upload
+              <span
+                v-if="reviewSongsState.totalSongs > 0"
+                class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
+              >
+                {{
+                  reviewSongsState.totalSongs > 9
+                    ? "9+"
+                    : reviewSongsState.totalSongs
+                }}
+              </span>
             </NuxtLink>
             <button
               class="ml-4 px-4 py-2 border border-transparent rounded-md text-sm font-medium text-gray-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400"
@@ -160,7 +169,30 @@ git
 </template>
 
 <script setup lang="ts">
+import { onMounted, onUnmounted } from "vue";
 // Use the auth composable
 import { useAuth } from "~/composables/useAuth";
+// Use the review songs composable
+import { useReviewSongs } from "~/composables/useReviewSongs";
+
 const { logout, user } = useAuth();
+const { reviewSongsState, fetchReviewSongs } = useReviewSongs();
+
+// Set up a periodic refresh of the review songs count (every 5 minutes)
+let refreshInterval: number | undefined;
+
+onMounted(() => {
+  refreshInterval = window.setInterval(() => {
+    fetchReviewSongs().catch((error) => {
+      console.error("Failed to refresh review songs count:", error);
+    });
+  }, 5 * 60 * 1000); // 5 minutes
+});
+
+// Clean up the interval when component is unmounted
+onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+  }
+});
 </script>

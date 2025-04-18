@@ -4,7 +4,7 @@
  * Supports pagination and sorting
  */
 
-import { defineEventHandler, getQuery } from "h3";
+import { defineEventHandler, getQuery, setResponseHeaders } from "h3";
 import {
   createSuccessResponse,
   handleApiError,
@@ -17,8 +17,16 @@ import type { MongoSong } from "~/types/mongo";
 
 export default defineEventHandler(async (event) => {
   try {
+    // Set proper CORS headers for local development
+    setResponseHeaders(event, {
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
+    });
+
     // Check if user is authenticated (middleware should already handle this)
     const { userId } = event.context.auth;
+
     if (!userId) {
       songsApiLogger.warn(
         "Attempt to access songs for review without authentication"
@@ -89,7 +97,12 @@ export default defineEventHandler(async (event) => {
     };
 
     const totalSongs = await songsCollection.countDocuments(findQuery);
-    const totalPages = Math.ceil(totalSongs / limit);
+    const totalPages = Math.max(Math.ceil(totalSongs / limit), 1);
+
+    songsApiLogger.debug(
+      { userId, totalSongs, totalPages },
+      "Found songs for review"
+    );
 
     // Check if requested page exceeds total pages
     if (page > totalPages && totalSongs > 0) {
@@ -167,8 +180,14 @@ export default defineEventHandler(async (event) => {
     // Return successful response
     return sendApiResponse(event, createSuccessResponse(result));
   } catch (error) {
-    // Log the error
-    songsApiLogger.error(error, "Error fetching songs for review");
+    // Log the error with more details
+    songsApiLogger.error(
+      {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      },
+      "Error fetching songs for review"
+    );
 
     // Handle any errors
     return sendApiResponse(event, handleApiError(error));
