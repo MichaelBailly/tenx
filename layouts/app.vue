@@ -172,7 +172,7 @@ import { useAuth } from "~/composables/useAuth";
 // Use the review songs composable
 import { useReviewSongs } from "~/composables/useReviewSongs";
 
-const { logout, user } = useAuth();
+const { logout } = useAuth();
 const { reviewSongsState, fetchReviewSongs } = useReviewSongs();
 
 // Set up a periodic refresh of the review songs count (every 5 minutes)

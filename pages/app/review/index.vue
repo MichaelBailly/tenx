@@ -48,11 +48,11 @@ const handleSaveSong = async (song: ApiSong) => {
   const success = await saveSong(song);
   if (success) {
     // Show a success notification
-    const notification = useNuxtApp().$notify?.success || console.log;
+    const notification = console.log;
     notification("Song updated and approved successfully");
   } else {
     // Show an error notification
-    const notification = useNuxtApp().$notify?.error || console.error;
+    const notification = console.error;
     notification("Failed to update song");
   }
 };
