@@ -95,21 +95,29 @@ export default defineEventHandler(async (event) => {
       // 1. Search tokentitle (title starts with q)
       const titleRegex = new RegExp(`^${q}`, "i");
       const titleMatches = await songsCollection
-        .find({ tokentitle: { $regex: titleRegex } })
+        .find({
+          tokentitle: { $regex: titleRegex },
+          valid: true,
+          reviewed: true,
+        })
         .sort(sortObj)
         .toArray();
 
       // 2. Search tokenartists (any entry starts with q)
       const artistRegex = new RegExp(`^${q}`, "i");
       const artistMatches = await songsCollection
-        .find({ tokenartists: { $elemMatch: { $regex: artistRegex } } })
+        .find({
+          tokenartists: { $elemMatch: { $regex: artistRegex } },
+          valid: true,
+          reviewed: true,
+        })
         .sort(sortObj)
         .toArray();
 
       // 3. Search album (album starts with q)
       const albumRegex = new RegExp(`^${q}`, "i");
       const albumMatches = await songsCollection
-        .find({ album: { $regex: albumRegex } })
+        .find({ album: { $regex: albumRegex }, valid: true, reviewed: true })
         .sort(sortObj)
         .toArray();
 
@@ -140,7 +148,10 @@ export default defineEventHandler(async (event) => {
       songs = deduped.slice(skip, skip + limit);
     } else {
       // Count total documents first
-      totalSongs = await songsCollection.countDocuments();
+      totalSongs = await songsCollection.countDocuments({
+        valid: true,
+        reviewed: true,
+      });
       totalPages = Math.ceil(totalSongs / limit);
 
       // Check if requested page exceeds total pages
@@ -160,7 +171,7 @@ export default defineEventHandler(async (event) => {
 
       // Get songs with pagination
       songs = await songsCollection
-        .find({})
+        .find({ valid: true, reviewed: true })
         .sort(sortObj)
         .skip(skip)
         .limit(limit)

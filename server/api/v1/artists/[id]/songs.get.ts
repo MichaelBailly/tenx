@@ -97,7 +97,11 @@ export default defineEventHandler(async (event) => {
     }
 
     // Find songs with the artist in tokenartists
-    const findQuery = { tokenartists: decodedArtistId };
+    const findQuery = {
+      tokenartists: decodedArtistId,
+      valid: true,
+      reviewed: true,
+    };
 
     // Count total documents first
     const totalSongs = await songsCollection.countDocuments(findQuery);
