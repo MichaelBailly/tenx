@@ -109,8 +109,13 @@ export const useAudioPlayerStore = defineStore("audioPlayer", {
       this.isLoading = true;
       this.error = null;
 
-      // Attempt to play the song
-      this.play();
+      // Wait for the audio to be ready before playing
+      const onCanPlay = () => {
+        this.audioElement?.removeEventListener("canplay", onCanPlay);
+        this.play();
+      };
+      this.audioElement.addEventListener("canplay", onCanPlay);
+      this.audioElement.load(); // Explicitly load the new source
     },
 
     /**
@@ -247,6 +252,27 @@ export const useAudioPlayerStore = defineStore("audioPlayer", {
       if (this.audioElement) {
         this.audioElement.muted = this.isMuted;
       }
+    },
+
+    /**
+     * Stop and reset the audio player (used when clearing the queue)
+     */
+    stop() {
+      if (this.audioElement) {
+        this.audioElement.pause();
+        this.audioElement.removeAttribute("src");
+        this.audioElement.load();
+        // Remove all event listeners by cleaning up
+        this.cleanup();
+      }
+      this.isPlaying = false;
+      this.currentTime = 0;
+      this.duration = 0;
+      this.isLoading = false;
+      this.error = null;
+      this.seekPosition = null;
+      // Re-initialize a fresh audio element for next playback
+      this.initialize();
     },
 
     /**

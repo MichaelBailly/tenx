@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { useAudioPlayer } from "~/composables/useAudioPlayer";
 import { usePlayerQueue } from "~/composables/usePlayerQueue";
 import type { ApiSong } from "~/types/api";
 
@@ -13,6 +14,8 @@ const {
   moveSongInQueue,
   addToQueue,
 } = usePlayerQueue();
+
+const { stop } = useAudioPlayer();
 
 // Drag-and-drop state
 const draggedSongIndex = ref<number | null>(null);
@@ -162,6 +165,7 @@ const handleQueueDrop = (e: DragEvent) => {
 // Handle clicking the clear queue button
 const handleClearQueue = () => {
   clearQueue();
+  stop();
 };
 
 // Handle clicking the play button for a song
@@ -187,10 +191,10 @@ const handleRemoveSong = (songId: string, index: number) => {
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-lg font-medium text-yellow-400">Player Queue</h2>
       <button
-        @click="handleClearQueue"
         class="text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-600 px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400"
         tabindex="0"
         aria-label="Clear queue"
+        @click="handleClearQueue"
       >
         Clear Queue
       </button>
@@ -248,9 +252,9 @@ const handleRemoveSong = (songId: string, index: number) => {
         <!-- Play indicator or play button -->
         <button
           class="flex-shrink-0 mr-2 text-yellow-400 hover:text-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded-full p-1"
-          @click="handlePlaySong(index)"
           tabindex="0"
           aria-label="Play song"
+          @click="handlePlaySong(index)"
         >
           <svg
             v-if="index === queueState.currentSongIndex"
@@ -303,9 +307,9 @@ const handleRemoveSong = (songId: string, index: number) => {
         <button
           v-if="index !== queueState.currentSongIndex"
           class="text-gray-400 hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-red-400 rounded p-1"
-          @click="handleRemoveSong(song._id, index)"
           tabindex="0"
           aria-label="Remove song from queue"
+          @click="handleRemoveSong(song._id, index)"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

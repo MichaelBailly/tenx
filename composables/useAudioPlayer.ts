@@ -50,5 +50,6 @@ export function useAudioPlayer() {
     loadSong: audioPlayerStore.loadSong,
     setVolume: audioPlayerStore.setVolume,
     toggleMute: audioPlayerStore.toggleMute,
+    stop: audioPlayerStore.stop,
   };
 }
