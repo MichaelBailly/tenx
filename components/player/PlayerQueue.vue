@@ -3,8 +3,16 @@ import { ref } from "vue";
 import { usePlayerQueue } from "~/composables/usePlayerQueue";
 import type { ApiSong } from "~/types/api";
 
-const { queueState, clearQueue, playSongFromQueue, formatDuration } =
-  usePlayerQueue();
+// Use the updated composable which now uses the Pinia store
+const {
+  queueState,
+  clearQueue,
+  playSongFromQueue,
+  formatDuration,
+  removeFromQueue,
+  moveSongInQueue,
+  addToQueue,
+} = usePlayerQueue();
 
 // Drag-and-drop state
 const draggedSongIndex = ref<number | null>(null);
@@ -61,8 +69,7 @@ const handleDrop = (e: DragEvent, toIndex: number) => {
       finalToIndex--;
     }
 
-    // Move it in the queue
-    const { moveSongInQueue } = usePlayerQueue();
+    // Move it in the queue using the store action via composable
     moveSongInQueue(fromIndex, finalToIndex);
 
     // Reset drag state
@@ -135,19 +142,11 @@ const handleQueueDrop = (e: DragEvent) => {
           insertIndex++;
         }
 
-        // Insert song at specific position
-        queueState.songs.splice(insertIndex, 0, song);
-
-        // Adjust current song index if inserting before currently playing song
-        if (
-          insertIndex <= queueState.currentSongIndex &&
-          queueState.currentSongIndex !== -1
-        ) {
-          queueState.currentSongIndex++;
-        }
+        // Use the Pinia store action to insert song at specific position
+        const { insertSongAt } = usePlayerQueue();
+        insertSongAt(song, insertIndex);
       } else {
         // Default: add to the end of queue
-        const { addToQueue } = usePlayerQueue();
         addToQueue(song);
       }
     } catch (err) {
@@ -172,19 +171,13 @@ const handlePlaySong = (index: number) => {
 
 // Handle removing a song from the queue
 const handleRemoveSong = (songId: string, index: number) => {
-  // Check if the song at the specified index is playing
-  if (index === queueState.currentSongIndex) {
-    return;
-  }
-
-  // Use the removeFromQueue function from the composable instead of directly manipulating the array
-  // This ensures all state updates are handled properly
-  const { removeFromQueue } = usePlayerQueue();
+  // Use the removeFromQueue action from the store via composable
   removeFromQueue(songId, index);
 };
 </script>
 
 <template>
+  <!-- The template remains unchanged since we're using the same queueState structure -->
   <div
     class="p-4 h-full"
     @dragover="handleQueueDragOver"

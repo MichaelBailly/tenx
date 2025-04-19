@@ -6,7 +6,13 @@ export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
   devtools: { enabled: !Config.env.isProduction },
   css: ["~/assets/css/tailwind.css"],
-  modules: ["@nuxt/eslint", "@nuxt/fonts", "@nuxt/icon", "@nuxt/image"],
+  modules: [
+    "@nuxt/eslint",
+    "@nuxt/fonts",
+    "@nuxt/icon",
+    "@nuxt/image",
+    "@pinia/nuxt",
+  ],
   vite: {
     plugins: [tailwindcss()],
   },

@@ -6,6 +6,7 @@ alwaysApply: true
 # Technical Stack
 
 - TypeScript and Vue js frontend with Tailwind CSS.
+- Pinia is used for state management of the audio player and the player queue only.
 - Nuxt.js as application server, used for server-side rendering, static site generation, and many other things. Pino is used to logging/debugging
 - MongoDB as the database. Using the mongodb driver, no ORM or ODM.
 
