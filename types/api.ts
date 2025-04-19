@@ -19,6 +19,7 @@ export type ApiSong = {
   ts_creation: number; // Timestamp of creation (JS timestamp)
   canEdit: boolean; // true if the user can edit the song
   valid: boolean; // Whether the song is valid
+  fileUrl?: string; // Optional URL for the audio file, used by the audio player
   images?: {
     // Optional images associated with the song
     filename?: string;

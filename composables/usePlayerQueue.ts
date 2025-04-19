@@ -1,5 +1,6 @@
 import { computed } from "vue";
 import { usePlayerQueueStore } from "~/stores/playerQueueStore";
+import type { ApiSong } from "~/types/api";
 
 export function usePlayerQueue() {
   const playerQueueStore = usePlayerQueueStore();
@@ -13,6 +14,28 @@ export function usePlayerQueue() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
+  // Enhanced addToQueue function that adds the fileUrl property
+  const addToQueue = (song: ApiSong) => {
+    // Add fileUrl property using song._id if it's not already present
+    const songWithFileUrl = {
+      ...song,
+      fileUrl: song.fileUrl || song._id,
+    };
+
+    playerQueueStore.addToQueue(songWithFileUrl);
+  };
+
+  // Enhanced insertSongAt function that adds the fileUrl property
+  const insertSongAt = (song: ApiSong, index: number) => {
+    // Add fileUrl property using song._id if it's not already present
+    const songWithFileUrl = {
+      ...song,
+      fileUrl: song.fileUrl || song._id,
+    };
+
+    return playerQueueStore.insertSongAt(songWithFileUrl, index);
+  };
+
   return {
     // State and getters from store
     queueState: computed(() => ({
@@ -21,8 +44,11 @@ export function usePlayerQueue() {
     })),
     currentlyPlayingSong: computed(() => playerQueueStore.currentlyPlayingSong),
 
-    // Store actions
-    addToQueue: playerQueueStore.addToQueue,
+    // Modified store actions
+    addToQueue,
+    insertSongAt,
+
+    // Original store actions
     removeFromQueue: playerQueueStore.removeFromQueue,
     moveSongInQueue: playerQueueStore.moveSongInQueue,
     clearQueue: playerQueueStore.clearQueue,
@@ -30,7 +56,6 @@ export function usePlayerQueue() {
     playNextSong: playerQueueStore.playNextSong,
     playPreviousSong: playerQueueStore.playPreviousSong,
     isSongPlaying: playerQueueStore.isSongPlaying,
-    insertSongAt: playerQueueStore.insertSongAt,
 
     // Utility function
     formatDuration,

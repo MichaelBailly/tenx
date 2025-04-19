@@ -22,56 +22,7 @@
           </div>
 
           <!-- Audio Player Controls -->
-          <div
-            class="flex-1 max-w-2xl mx-auto flex items-center justify-center space-x-4"
-          >
-            <button
-              class="text-gray-300 hover:text-white p-2 rounded-full hover:bg-gray-700"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"
-                />
-              </svg>
-            </button>
-            <button
-              class="text-gray-300 hover:text-white p-2 rounded-full hover:bg-gray-700"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </button>
-            <button
-              class="text-gray-300 hover:text-white p-2 rounded-full hover:bg-gray-700"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  d="M4.555 5.168A1 1 0 003 6v8a1 1 0 001.555.832L10 11.202V14a1 1 0 001.555.832l6-4a1 1 0 000-1.664l-6-4A1 1 0 0010 6v2.798L4.555 5.168z"
-                />
-              </svg>
-            </button>
-          </div>
+          <AudioPlayer />
 
           <div class="flex items-center">
             <NuxtLink
@@ -102,11 +53,6 @@
               Log out
             </button>
           </div>
-        </div>
-
-        <!-- Progress bar -->
-        <div class="w-full h-1 bg-gray-700">
-          <div class="h-full bg-yellow-400 w-1/3"></div>
         </div>
       </div>
     </header>
@@ -144,6 +90,8 @@ import { useAuth } from "~/composables/useAuth";
 import { useReviewSongs } from "~/composables/useReviewSongs";
 // Import the PlayerQueue component
 import PlayerQueue from "~/components/player/PlayerQueue.vue";
+// Import the AudioPlayer component
+import AudioPlayer from "~/components/player/AudioPlayer.vue";
 
 const { logout } = useAuth();
 const { reviewSongsState, fetchReviewSongs } = useReviewSongs();
