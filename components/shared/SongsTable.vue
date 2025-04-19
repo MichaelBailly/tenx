@@ -49,26 +49,13 @@ const handlePlayClick = (song: ApiSong) => {
   }
   // Case 2: A song is already playing, add this song just after the current one and play it
   else {
-    // Find the song in the queue to avoid duplicates
-    const songIndex = queue.findIndex((s) => s._id === song._id);
+    // Always insert the song after the currently playing one, regardless of whether it already exists in the queue
+    insertSongAt(song, currentIndex + 1);
+    playSongFromQueue(currentIndex + 1);
 
-    if (songIndex !== -1) {
-      // Song already exists in queue, just play it
-      playSongFromQueue(songIndex);
-
-      // Explicitly load and play the song
-      if (song.fileUrl || song._id) {
-        loadSong(song.fileUrl || song._id);
-      }
-    } else {
-      // Insert after currently playing song
-      insertSongAt(song, currentIndex + 1);
-      playSongFromQueue(currentIndex + 1);
-
-      // Explicitly load and play the song
-      if (song.fileUrl || song._id) {
-        loadSong(song.fileUrl || song._id);
-      }
+    // Explicitly load and play the song
+    if (song.fileUrl || song._id) {
+      loadSong(song.fileUrl || song._id);
     }
   }
 };
@@ -102,7 +89,7 @@ const handleDragStart = (e: DragEvent, song: ApiSong) => {
         <tr>
           <th
             class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
-          ></th>
+          />
           <th
             class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
           >
@@ -205,8 +192,8 @@ const handleDragStart = (e: DragEvent, song: ApiSong) => {
             @click.stop
           >
             <div
-              class="flex flex-wrap gap-1"
               v-if="song.tokenartists && song.tokenartists.length"
+              class="flex flex-wrap gap-1"
             >
               <template
                 v-for="(artist, index) in song.tokenartists"
