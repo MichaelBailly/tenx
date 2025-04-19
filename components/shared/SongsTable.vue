@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { NuxtLink } from "#components";
+import { useAudioPlayer } from "~/composables/useAudioPlayer";
+import { usePlayerQueue } from "~/composables/usePlayerQueue";
 import type { ApiSong } from "~/types/api";
 
 const props = defineProps<{
@@ -11,8 +13,65 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "sort", field: string): void;
-  (e: "play", song: ApiSong): void;
 }>();
+
+// Initialize player queue and audio player composables
+const { queueState, addToQueue, insertSongAt, playSongFromQueue } =
+  usePlayerQueue();
+const { loadSong } = useAudioPlayer();
+
+// Enhanced play button functionality
+const handlePlayClick = (song: ApiSong) => {
+  const queue = queueState.value.songs;
+  const currentIndex = queueState.value.currentSongIndex;
+
+  // Case 1: Queue is empty or player is not playing
+  if (queue.length === 0 || currentIndex === -1) {
+    // Add song to the beginning of queue and play it
+    if (queue.length === 0) {
+      addToQueue(song);
+      playSongFromQueue(0);
+
+      // Explicitly load and play the song
+      if (song.fileUrl || song._id) {
+        loadSong(song.fileUrl || song._id);
+      }
+    } else {
+      // Insert at the beginning and play it
+      insertSongAt(song, 0);
+      playSongFromQueue(0);
+
+      // Explicitly load and play the song
+      if (song.fileUrl || song._id) {
+        loadSong(song.fileUrl || song._id);
+      }
+    }
+  }
+  // Case 2: A song is already playing, add this song just after the current one and play it
+  else {
+    // Find the song in the queue to avoid duplicates
+    const songIndex = queue.findIndex((s) => s._id === song._id);
+
+    if (songIndex !== -1) {
+      // Song already exists in queue, just play it
+      playSongFromQueue(songIndex);
+
+      // Explicitly load and play the song
+      if (song.fileUrl || song._id) {
+        loadSong(song.fileUrl || song._id);
+      }
+    } else {
+      // Insert after currently playing song
+      insertSongAt(song, currentIndex + 1);
+      playSongFromQueue(currentIndex + 1);
+
+      // Explicitly load and play the song
+      if (song.fileUrl || song._id) {
+        loadSong(song.fileUrl || song._id);
+      }
+    }
+  }
+};
 
 const getSortIndicator = (field: string) => {
   if (field !== props.sortField) return "";
@@ -110,8 +169,8 @@ const handleDragStart = (e: DragEvent, song: ApiSong) => {
             <button
               class="text-yellow-400 hover:text-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 rounded-full p-1"
               tabindex="0"
-              @click="emit('play', song)"
-              @keydown.enter="emit('play', song)"
+              @click="handlePlayClick(song)"
+              @keydown.enter="handlePlayClick(song)"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

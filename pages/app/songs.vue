@@ -7,9 +7,7 @@ import SongsLoadingState from "~/components/shared/SongsLoadingState.vue";
 import SongsNavigation from "~/components/shared/SongsNavigation.vue";
 import SongsTable from "~/components/shared/SongsTable.vue";
 import Pagination from "~/components/ui/Pagination.vue";
-import { usePlayerQueue } from "~/composables/usePlayerQueue";
 import { useSongs } from "~/composables/useSongs";
-import type { ApiSong } from "~/types/api";
 
 // Define page meta to use our app layout
 definePageMeta({
@@ -27,8 +25,6 @@ const {
   changeSearch,
 } = await useSongs();
 
-const { addToQueue, playSongFromQueue, queueState } = usePlayerQueue();
-
 const isLoading = computed(() => songsState.loading);
 const hasError = computed(() => !!songsState.error);
 const hasSongs = computed(() => songsState.songs.length > 0);
@@ -43,18 +39,6 @@ const handleLimitChange = (event: Event) => {
   const select = event.target as HTMLSelectElement;
   const newLimit = Number(select.value);
   changeLimit(newLimit);
-};
-
-// Handler for play button
-const handlePlay = (song: ApiSong) => {
-  // Add song to queue if not already there
-  addToQueue(song);
-
-  // Find the song in the queue and play it
-  const songIndex = queueState.songs.findIndex((s) => s._id === song._id);
-  if (songIndex !== -1) {
-    playSongFromQueue(songIndex);
-  }
 };
 </script>
 
@@ -93,7 +77,6 @@ const handlePlay = (song: ApiSong) => {
       :sort-direction="songsState.sortDirection"
       :format-duration="formatDuration"
       @sort="changeSort"
-      @play="handlePlay"
     />
 
     <!-- Pagination -->
