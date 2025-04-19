@@ -12,7 +12,8 @@
       </div>
     </div>
     <div v-else class="w-full text-center mb-1 text-xs text-gray-400">
-      No song playing
+      <div class="text-xs font-medium text-white truncate">&nbsp;</div>
+      <div class="text-xs text-gray-400 truncate">&nbsp;</div>
     </div>
 
     <!-- Controls and progress bar -->
@@ -70,7 +71,9 @@
       </div>
 
       <!-- Playback controls -->
-      <div class="flex items-center justify-center space-x-4">
+      <div
+        class="flex items-center justify-center space-x-4 -translate-y-[5px]"
+      >
         <!-- Previous button -->
         <button
           class="text-gray-300 hover:text-white p-0 rounded-full hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400"
