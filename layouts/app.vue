@@ -60,6 +60,12 @@
     <!-- Floating Speed Control Panel -->
     <SpeedControlPanel :is-open="isSpeedPanelOpen" @close="closeSpeedPanel" />
 
+    <!-- Floating Crossfade Control Panel -->
+    <CrossfadeControlPanel
+      :is-open="isCrossfadePanelOpen"
+      @close="closeCrossfadePanel"
+    />
+
     <div class="flex flex-1 pt-14">
       <!-- Main Content -->
       <main class="flex-1 overflow-y-auto px-4 py-6 mr-80">
@@ -95,14 +101,16 @@ import { useReviewSongs } from "~/composables/useReviewSongs";
 import PlayerQueue from "~/components/player/PlayerQueue.vue";
 // Import the AudioPlayer component
 import AudioPlayer from "~/components/player/AudioPlayer.vue";
-// Import the SpeedControlPanel component
+// Import the panels
+import CrossfadeControlPanel from "~/components/player/CrossfadeControlPanel.vue";
 import SpeedControlPanel from "~/components/player/SpeedControlPanel.vue";
 
 const { logout } = useAuth();
 const { reviewSongsState, fetchReviewSongs } = useReviewSongs();
 
-// Speed panel control
+// Panel controls
 const isSpeedPanelOpen = ref(false);
+const isCrossfadePanelOpen = ref(false);
 
 // Function to close the speed panel
 const closeSpeedPanel = () => {
@@ -118,10 +126,24 @@ const closeSpeedPanel = () => {
   );
 };
 
+// Function to close the crossfade panel
+const closeCrossfadePanel = () => {
+  isCrossfadePanelOpen.value = false;
+
+  // Notify the AudioPlayer component that the panel has been closed
+  window.dispatchEvent(
+    new CustomEvent("crossfade-panel-state-change", {
+      detail: {
+        visible: false,
+      },
+    })
+  );
+};
+
 // Set up a periodic refresh of the review songs count (every 5 minutes)
 let refreshInterval: number | undefined;
 
-// Event handling for speed panel
+// Event handling for panels
 onMounted(() => {
   refreshInterval = window.setInterval(() => {
     fetchReviewSongs().catch((error) => {
@@ -132,7 +154,19 @@ onMounted(() => {
   // Listen for toggle-speed-panel event from AudioPlayer component
   window.addEventListener("toggle-speed-panel", ((event: CustomEvent) => {
     isSpeedPanelOpen.value = event.detail.visible;
-    console.log("Speed panel toggled:", isSpeedPanelOpen.value);
+    // Close the other panel if it's open
+    if (isSpeedPanelOpen.value && isCrossfadePanelOpen.value) {
+      closeCrossfadePanel();
+    }
+  }) as EventListener);
+
+  // Listen for toggle-crossfade-panel event from AudioPlayer component
+  window.addEventListener("toggle-crossfade-panel", ((event: CustomEvent) => {
+    isCrossfadePanelOpen.value = event.detail.visible;
+    // Close the other panel if it's open
+    if (isCrossfadePanelOpen.value && isSpeedPanelOpen.value) {
+      closeSpeedPanel();
+    }
   }) as EventListener);
 });
 
@@ -142,7 +176,11 @@ onUnmounted(() => {
     clearInterval(refreshInterval);
   }
 
-  // Remove event listener
+  // Remove event listeners
   window.removeEventListener("toggle-speed-panel", (() => {}) as EventListener);
+  window.removeEventListener(
+    "toggle-crossfade-panel",
+    (() => {}) as EventListener
+  );
 });
 </script>

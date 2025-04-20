@@ -200,6 +200,53 @@
             />
           </svg>
         </button>
+
+        <!-- Crossfade toggle button -->
+        <button
+          v-if="currentSong"
+          class="text-gray-300 hover:text-yellow-400 p-1 rounded bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 ml-1 text-xs flex items-center transition-colors duration-150"
+          :class="{ 'bg-gray-600 text-yellow-400': enableCrossfade }"
+          @click="toggleCrossfadePanel"
+          @keydown.enter="toggleCrossfadePanel"
+          @keydown.space.prevent="toggleCrossfadePanel"
+          tabindex="0"
+          aria-label="Toggle crossfade controls"
+          :aria-expanded="crossfadePanelVisible"
+          title="Crossfade settings"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 mr-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+            />
+          </svg>
+          <span class="font-medium">{{
+            enableCrossfade ? formattedCrossfadeDuration : "Off"
+          }}</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-3 w-3 ml-1 transition-transform duration-150"
+            :class="crossfadePanelVisible ? 'rotate-180' : ''"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </button>
       </div>
     </div>
   </div>
@@ -220,6 +267,8 @@ const {
   formattedSeekPosition,
   currentSong,
   formattedPlaybackSpeed,
+  formattedCrossfadeDuration,
+  enableCrossfade,
   togglePlay,
   playNext,
   playPrevious,
@@ -234,9 +283,16 @@ const hoverPercentage = ref(0);
 // Setup for the speed control panel
 const speedPanelVisible = ref(false);
 
+// Setup for the crossfade control panel
+const crossfadePanelVisible = ref(false);
+
 // Toggle speed control panel visibility
 const toggleSpeedPanel = () => {
   speedPanelVisible.value = !speedPanelVisible.value;
+  // If opening this panel, close the crossfade panel if it's open
+  if (speedPanelVisible.value && crossfadePanelVisible.value) {
+    crossfadePanelVisible.value = false;
+  }
   // Emit custom event for the app layout to handle
   window.dispatchEvent(
     new CustomEvent("toggle-speed-panel", {
@@ -247,17 +303,44 @@ const toggleSpeedPanel = () => {
   );
 };
 
+// Toggle crossfade control panel visibility
+const toggleCrossfadePanel = () => {
+  crossfadePanelVisible.value = !crossfadePanelVisible.value;
+  // If opening this panel, close the speed panel if it's open
+  if (crossfadePanelVisible.value && speedPanelVisible.value) {
+    speedPanelVisible.value = false;
+  }
+  // Emit custom event for the app layout to handle
+  window.dispatchEvent(
+    new CustomEvent("toggle-crossfade-panel", {
+      detail: {
+        visible: crossfadePanelVisible.value,
+      },
+    })
+  );
+};
+
 // Listen for panel close events from other components
 onMounted(() => {
   window.addEventListener("speed-panel-state-change", ((event: CustomEvent) => {
     speedPanelVisible.value = event.detail.visible;
   }) as EventListener);
+
+  window.addEventListener("crossfade-panel-state-change", ((
+    event: CustomEvent
+  ) => {
+    crossfadePanelVisible.value = event.detail.visible;
+  }) as EventListener);
 });
 
-// Remove event listener on unmount
+// Remove event listeners on unmount
 onUnmounted(() => {
   window.removeEventListener(
     "speed-panel-state-change",
+    (() => {}) as EventListener
+  );
+  window.removeEventListener(
+    "crossfade-panel-state-change",
     (() => {}) as EventListener
   );
 });

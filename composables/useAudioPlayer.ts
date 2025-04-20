@@ -26,6 +26,11 @@ export function useAudioPlayer() {
     seekPosition: computed(() => audioPlayerStore.seekPosition),
     playbackSpeed: computed(() => audioPlayerStore.playbackSpeed),
 
+    // Crossfade state
+    enableCrossfade: computed(() => audioPlayerStore.enableCrossfade),
+    crossfadeDuration: computed(() => audioPlayerStore.crossfadeDuration),
+    isCrossfading: computed(() => audioPlayerStore.isCrossfading),
+
     // Formatted values
     formattedCurrentTime: computed(() => audioPlayerStore.formattedCurrentTime),
     formattedDuration: computed(() => audioPlayerStore.formattedDuration),
@@ -35,6 +40,9 @@ export function useAudioPlayer() {
     progressPercentage: computed(() => audioPlayerStore.progressPercentage),
     formattedPlaybackSpeed: computed(
       () => audioPlayerStore.formattedPlaybackSpeed
+    ),
+    formattedCrossfadeDuration: computed(
+      () => audioPlayerStore.formattedCrossfadeDuration
     ),
 
     // Queue-related data
@@ -54,6 +62,10 @@ export function useAudioPlayer() {
     increasePlaybackSpeed: audioPlayerStore.increasePlaybackSpeed,
     decreasePlaybackSpeed: audioPlayerStore.decreasePlaybackSpeed,
     setPlaybackSpeed: audioPlayerStore.setPlaybackSpeed,
+
+    // Crossfade actions
+    toggleCrossfade: audioPlayerStore.toggleCrossfade,
+    setCrossfadeDuration: audioPlayerStore.setCrossfadeDuration,
 
     // Additional actions
     loadSong: audioPlayerStore.loadSong,
