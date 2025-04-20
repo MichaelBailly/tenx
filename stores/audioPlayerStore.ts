@@ -12,6 +12,7 @@ export const useAudioPlayerStore = defineStore("audioPlayer", {
     isLoading: false,
     error: null as string | null,
     seekPosition: null as number | null, // For hover indication
+    playbackSpeed: 1.0, // Default playback speed
   }),
 
   getters: {
@@ -36,6 +37,11 @@ export const useAudioPlayerStore = defineStore("audioPlayer", {
       if (state.seekPosition === null) return null;
       return formatTimeDisplay(state.seekPosition);
     },
+
+    // Format playback speed for display with one decimal place
+    formattedPlaybackSpeed: (state) => {
+      return `${state.playbackSpeed.toFixed(1)}x`;
+    },
   },
 
   actions: {
@@ -46,14 +52,48 @@ export const useAudioPlayerStore = defineStore("audioPlayer", {
       if (typeof window !== "undefined" && !this.audioElement) {
         this.audioElement = new Audio();
 
+        // Use arrow functions to preserve 'this' context
+        const handleTimeUpdate = () => {
+          if (this.audioElement) {
+            this.currentTime = this.audioElement.currentTime;
+          }
+        };
+
+        const handleMetadataLoaded = () => {
+          if (this.audioElement) {
+            this.duration = this.audioElement.duration;
+            this.isLoading = false;
+          }
+        };
+
+        const handleEnded = () => {
+          this.isPlaying = false;
+          // Try to play the next song in the queue
+          this.playNext();
+        };
+
+        const handleError = (event: Event) => {
+          const error = event.currentTarget as HTMLAudioElement;
+          this.isPlaying = false;
+          this.isLoading = false;
+          this.error = `Audio error code: ${error.error?.code || "unknown"}`;
+          console.error("Audio error:", error.error);
+        };
+
+        // Store these functions for later removal
+        this.handleTimeUpdate = handleTimeUpdate;
+        this.handleMetadataLoaded = handleMetadataLoaded;
+        this.handleEnded = handleEnded;
+        this.handleError = handleError;
+
         // Set up event listeners
-        this.audioElement.addEventListener("timeupdate", this.handleTimeUpdate);
+        this.audioElement.addEventListener("timeupdate", handleTimeUpdate);
         this.audioElement.addEventListener(
           "loadedmetadata",
-          this.handleMetadataLoaded
+          handleMetadataLoaded
         );
-        this.audioElement.addEventListener("ended", this.handleEnded);
-        this.audioElement.addEventListener("error", this.handleError);
+        this.audioElement.addEventListener("ended", handleEnded);
+        this.audioElement.addEventListener("error", handleError);
         this.audioElement.addEventListener(
           "waiting",
           () => (this.isLoading = true)
@@ -65,6 +105,12 @@ export const useAudioPlayerStore = defineStore("audioPlayer", {
 
         // Apply volume setting
         this.audioElement.volume = this.volume;
+
+        // Apply playback speed
+        this.audioElement.playbackRate = this.playbackSpeed;
+        console.log(
+          `Initialized audio element with playback speed: ${this.playbackSpeed}`
+        );
       }
     },
 
@@ -109,11 +155,21 @@ export const useAudioPlayerStore = defineStore("audioPlayer", {
       this.isLoading = true;
       this.error = null;
 
+      // Reset playback speed to default (1.0x) for new songs
+      this.playbackSpeed = 1.0;
+
       // Wait for the audio to be ready before playing
       const onCanPlay = () => {
         this.audioElement?.removeEventListener("canplay", onCanPlay);
+
+        // Apply default playback speed (1.0x) to the new song
+        if (this.audioElement) {
+          this.audioElement.playbackRate = 1.0;
+        }
+
         this.play();
       };
+
       this.audioElement.addEventListener("canplay", onCanPlay);
       this.audioElement.load(); // Explicitly load the new source
     },
@@ -289,6 +345,39 @@ export const useAudioPlayerStore = defineStore("audioPlayer", {
         this.seekPosition = (percentage / 100) * this.duration;
       } else {
         this.seekPosition = 0;
+      }
+    },
+
+    /**
+     * Increase playback speed by 5% (0.05)
+     */
+    increasePlaybackSpeed() {
+      const newSpeed = Math.min(2.0, this.playbackSpeed + 0.05);
+      this.setPlaybackSpeed(newSpeed);
+      console.log(`Increased speed to: ${newSpeed.toFixed(2)}`);
+    },
+
+    /**
+     * Decrease playback speed by 5% (0.05)
+     */
+    decreasePlaybackSpeed() {
+      const newSpeed = Math.max(0.5, this.playbackSpeed - 0.05);
+      this.setPlaybackSpeed(newSpeed);
+      console.log(`Decreased speed to: ${newSpeed.toFixed(2)}`);
+    },
+
+    /**
+     * Set the playback speed
+     * @param speed New playback speed (between 0.5 and 2.0)
+     */
+    setPlaybackSpeed(speed: number) {
+      // Ensure speed is between 0.5 and 2.0
+      const constrainedSpeed = Math.max(0.5, Math.min(2.0, speed));
+      this.playbackSpeed = constrainedSpeed;
+
+      if (this.audioElement) {
+        this.audioElement.playbackRate = constrainedSpeed;
+        console.log(`Set playbackRate to: ${constrainedSpeed}`);
       }
     },
 

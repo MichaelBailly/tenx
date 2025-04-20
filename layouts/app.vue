@@ -57,6 +57,9 @@
       </div>
     </header>
 
+    <!-- Floating Speed Control Panel -->
+    <SpeedControlPanel :is-open="isSpeedPanelOpen" @close="closeSpeedPanel" />
+
     <div class="flex flex-1 pt-14">
       <!-- Main Content -->
       <main class="flex-1 overflow-y-auto px-4 py-6 mr-80">
@@ -83,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 // Use the auth composable
 import { useAuth } from "~/composables/useAuth";
 // Use the review songs composable
@@ -92,19 +95,36 @@ import { useReviewSongs } from "~/composables/useReviewSongs";
 import PlayerQueue from "~/components/player/PlayerQueue.vue";
 // Import the AudioPlayer component
 import AudioPlayer from "~/components/player/AudioPlayer.vue";
+// Import the SpeedControlPanel component
+import SpeedControlPanel from "~/components/player/SpeedControlPanel.vue";
 
 const { logout } = useAuth();
 const { reviewSongsState, fetchReviewSongs } = useReviewSongs();
 
+// Speed panel control
+const isSpeedPanelOpen = ref(false);
+
+// Function to close the speed panel
+const closeSpeedPanel = () => {
+  isSpeedPanelOpen.value = false;
+};
+
 // Set up a periodic refresh of the review songs count (every 5 minutes)
 let refreshInterval: number | undefined;
 
+// Event handling for speed panel
 onMounted(() => {
   refreshInterval = window.setInterval(() => {
     fetchReviewSongs().catch((error) => {
       console.error("Failed to refresh review songs count:", error);
     });
   }, 5 * 60 * 1000); // 5 minutes
+
+  // Listen for toggle-speed-panel event from AudioPlayer component
+  window.addEventListener("toggle-speed-panel", ((event: CustomEvent) => {
+    isSpeedPanelOpen.value = event.detail.visible;
+    console.log("Speed panel toggled:", isSpeedPanelOpen.value);
+  }) as EventListener);
 });
 
 // Clean up the interval when component is unmounted
@@ -112,5 +132,8 @@ onUnmounted(() => {
   if (refreshInterval) {
     clearInterval(refreshInterval);
   }
+
+  // Remove event listener
+  window.removeEventListener("toggle-speed-panel", (() => {}) as EventListener);
 });
 </script>

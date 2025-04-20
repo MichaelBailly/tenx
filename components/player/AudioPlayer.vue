@@ -156,6 +156,50 @@
             />
           </svg>
         </button>
+
+        <!-- Speed control toggle button -->
+        <button
+          v-if="currentSong"
+          class="text-gray-300 hover:text-yellow-400 p-1 rounded bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 ml-1 text-xs flex items-center transition-colors duration-150"
+          @click="toggleSpeedPanel"
+          @keydown.enter="toggleSpeedPanel"
+          @keydown.space.prevent="toggleSpeedPanel"
+          tabindex="0"
+          aria-label="Toggle speed controls"
+          :aria-expanded="speedPanelVisible"
+          title="Playback speed"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 mr-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 10V3L4 14h7v7l9-11h-7z"
+            />
+          </svg>
+          <span class="font-medium">{{ formattedPlaybackSpeed }}</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-3 w-3 ml-1 transition-transform duration-150"
+            :class="speedPanelVisible ? 'rotate-180' : ''"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </button>
       </div>
     </div>
   </div>
@@ -175,16 +219,35 @@ const {
   seekPosition,
   formattedSeekPosition,
   currentSong,
+  formattedPlaybackSpeed,
   togglePlay,
   playNext,
   playPrevious,
   seekByPercentage,
   updateSeekPosition,
+  increasePlaybackSpeed,
+  decreasePlaybackSpeed,
 } = useAudioPlayer();
 
 // Reference to the progress bar element for click positioning
 const progressBarRef = ref<HTMLDivElement | null>(null);
 const hoverPercentage = ref(0);
+
+// Setup for the speed control panel
+const speedPanelVisible = ref(false);
+
+// Toggle speed control panel visibility
+const toggleSpeedPanel = () => {
+  speedPanelVisible.value = !speedPanelVisible.value;
+  // Emit custom event for the app layout to handle
+  window.dispatchEvent(
+    new CustomEvent("toggle-speed-panel", {
+      detail: {
+        visible: speedPanelVisible.value,
+      },
+    })
+  );
+};
 
 // Handle click on the progress bar to seek
 const handleProgressBarClick = (event: MouseEvent) => {

@@ -24,6 +24,7 @@ export function useAudioPlayer() {
     isLoading: computed(() => audioPlayerStore.isLoading),
     error: computed(() => audioPlayerStore.error),
     seekPosition: computed(() => audioPlayerStore.seekPosition),
+    playbackSpeed: computed(() => audioPlayerStore.playbackSpeed),
 
     // Formatted values
     formattedCurrentTime: computed(() => audioPlayerStore.formattedCurrentTime),
@@ -32,6 +33,9 @@ export function useAudioPlayer() {
       () => audioPlayerStore.formattedSeekPosition
     ),
     progressPercentage: computed(() => audioPlayerStore.progressPercentage),
+    formattedPlaybackSpeed: computed(
+      () => audioPlayerStore.formattedPlaybackSpeed
+    ),
 
     // Queue-related data
     currentSong: computed(() => playerQueueStore.currentlyPlayingSong),
@@ -45,6 +49,11 @@ export function useAudioPlayer() {
     seek: audioPlayerStore.seek,
     seekByPercentage: audioPlayerStore.seekByPercentage,
     updateSeekPosition: audioPlayerStore.updateSeekPosition,
+
+    // Playback speed actions
+    increasePlaybackSpeed: audioPlayerStore.increasePlaybackSpeed,
+    decreasePlaybackSpeed: audioPlayerStore.decreasePlaybackSpeed,
+    setPlaybackSpeed: audioPlayerStore.setPlaybackSpeed,
 
     // Additional actions
     loadSong: audioPlayerStore.loadSong,
