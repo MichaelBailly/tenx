@@ -1,9 +1,16 @@
 import { computed, onMounted, onUnmounted } from "vue";
+import {
+  useAudioCorePlayerStore,
+  useAudioEffectsStore,
+} from "~/stores/audioPlayer";
 import { useAudioPlayerStore } from "~/stores/audioPlayerStore";
 import { usePlayerQueueStore } from "~/stores/playerQueueStore";
 
 export function useAudioPlayer() {
+  // Initialize all the necessary stores
   const audioPlayerStore = useAudioPlayerStore();
+  const corePlayerStore = useAudioCorePlayerStore();
+  const audioEffectsStore = useAudioEffectsStore();
   const playerQueueStore = usePlayerQueueStore();
 
   // Initialize the audio player when component is mounted
@@ -18,18 +25,18 @@ export function useAudioPlayer() {
 
   return {
     // Player state
-    isPlaying: computed(() => audioPlayerStore.isPlaying),
-    currentTime: computed(() => audioPlayerStore.currentTime),
-    duration: computed(() => audioPlayerStore.duration),
-    isLoading: computed(() => audioPlayerStore.isLoading),
-    error: computed(() => audioPlayerStore.error),
-    seekPosition: computed(() => audioPlayerStore.seekPosition),
-    playbackSpeed: computed(() => audioPlayerStore.playbackSpeed),
+    isPlaying: computed(() => corePlayerStore.isPlaying),
+    currentTime: computed(() => corePlayerStore.currentTime),
+    duration: computed(() => corePlayerStore.duration),
+    isLoading: computed(() => corePlayerStore.isLoading),
+    error: computed(() => corePlayerStore.error),
+    seekPosition: computed(() => audioEffectsStore.seekPosition),
+    playbackSpeed: computed(() => audioEffectsStore.playbackSpeed),
 
     // Crossfade state
-    enableCrossfade: computed(() => audioPlayerStore.enableCrossfade),
-    crossfadeDuration: computed(() => audioPlayerStore.crossfadeDuration),
-    isCrossfading: computed(() => audioPlayerStore.isCrossfading),
+    enableCrossfade: computed(() => audioEffectsStore.enableCrossfade),
+    crossfadeDuration: computed(() => audioEffectsStore.crossfadeDuration),
+    isCrossfading: computed(() => audioEffectsStore.isCrossfading),
 
     // Formatted values
     formattedCurrentTime: computed(() => audioPlayerStore.formattedCurrentTime),
@@ -48,7 +55,7 @@ export function useAudioPlayer() {
     // Queue-related data
     currentSong: computed(() => playerQueueStore.currentlyPlayingSong),
 
-    // Player actions
+    // Player actions - using the main audioPlayerStore for backward compatibility
     play: audioPlayerStore.play,
     pause: audioPlayerStore.pause,
     togglePlay: audioPlayerStore.togglePlay,
