@@ -149,7 +149,7 @@
 <script setup lang="ts">
 import { useAudioPlayer } from "~/composables/useAudioPlayer";
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean;
 }>();
 

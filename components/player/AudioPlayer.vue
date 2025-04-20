@@ -206,7 +206,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { useAudioPlayer } from "~/composables/useAudioPlayer";
 
 // Get all the player functionalities from the composable
@@ -225,8 +225,6 @@ const {
   playPrevious,
   seekByPercentage,
   updateSeekPosition,
-  increasePlaybackSpeed,
-  decreasePlaybackSpeed,
 } = useAudioPlayer();
 
 // Reference to the progress bar element for click positioning
@@ -248,6 +246,21 @@ const toggleSpeedPanel = () => {
     })
   );
 };
+
+// Listen for panel close events from other components
+onMounted(() => {
+  window.addEventListener("speed-panel-state-change", ((event: CustomEvent) => {
+    speedPanelVisible.value = event.detail.visible;
+  }) as EventListener);
+});
+
+// Remove event listener on unmount
+onUnmounted(() => {
+  window.removeEventListener(
+    "speed-panel-state-change",
+    (() => {}) as EventListener
+  );
+});
 
 // Handle click on the progress bar to seek
 const handleProgressBarClick = (event: MouseEvent) => {

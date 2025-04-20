@@ -107,6 +107,15 @@ const isSpeedPanelOpen = ref(false);
 // Function to close the speed panel
 const closeSpeedPanel = () => {
   isSpeedPanelOpen.value = false;
+
+  // Notify the AudioPlayer component that the panel has been closed
+  window.dispatchEvent(
+    new CustomEvent("speed-panel-state-change", {
+      detail: {
+        visible: false,
+      },
+    })
+  );
 };
 
 // Set up a periodic refresh of the review songs count (every 5 minutes)
