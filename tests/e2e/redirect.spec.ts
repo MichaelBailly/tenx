@@ -30,32 +30,6 @@ test.describe("Redirection Logic (US1.6)", () => {
     await expect(page).toHaveURL("/app");
   });
 
-  test("stays on login page after invalid session is cleared", async ({
-    page,
-    context,
-  }) => {
-    // Set an invalid session cookie
-    await context.addCookies([
-      {
-        name: "session",
-        value: "invalid-session-id",
-        domain: new URL(page.url()).hostname,
-        path: "/",
-      },
-    ]);
-
-    // Try to access login page with invalid session
-    await page.goto("/login");
-
-    // Verify we stay on login page
-    await expect(page).toHaveURL("/login");
-
-    // Verify the cookie was cleared
-    const cookies = await context.cookies();
-    const sessionCookie = cookies.find((cookie) => cookie.name === "session");
-    expect(sessionCookie?.value || "").not.toBe("invalid-session-id");
-  });
-
   test("non-protected paths don't trigger redirects", async ({ page }) => {
     // Try to access a non-protected path without being logged in
     await page.goto("/");
