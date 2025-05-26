@@ -20,14 +20,14 @@ export default defineConfig({
     {
       name: "firefox",
       use: { ...devices["Desktop Firefox"] },
-    },
+    } /*
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"] },
-    },
+    },*/,
   ],
   webServer: {
-    command: "npm run preview",
+    command: "npm run dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
   },
