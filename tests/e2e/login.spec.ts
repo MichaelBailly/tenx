@@ -123,4 +123,33 @@ test.describe("Login Page", () => {
     // Wait for form to be enabled again (after response)
     await expect(submitButton).not.toBeDisabled({ timeout: 2000 });
   });
+
+  test("successfully logs in with valid credentials", async ({ page }) => {
+    await page.goto("/login");
+
+    // Wait for Vue component to be fully hydrated
+    await page.waitForFunction(() => {
+      return (
+        document.readyState === "complete" &&
+        document.querySelector("#__nuxt") &&
+        !document.querySelector("[data-island-uid]")
+      );
+    });
+    await page.waitForTimeout(500);
+
+    // Fill in valid credentials
+    await page.fill('input[name="username"]', "test_user");
+    await page.fill('input[name="password"]', "test_password");
+
+    // Submit the form
+    await page.click('button[type="submit"]');
+
+    // Wait for successful login and redirect
+    await page.waitForURL((url) => !url.pathname.includes("/login"), {
+      timeout: 5000,
+    });
+
+    // Verify we're no longer on the login page
+    await expect(page).not.toHaveURL("/login");
+  });
 });
