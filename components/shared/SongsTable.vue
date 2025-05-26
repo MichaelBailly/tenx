@@ -217,7 +217,14 @@ const handleDragStart = (e: DragEvent, song: ApiSong) => {
             class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"
             tabindex="0"
           >
-            {{ song.album }}
+            <NuxtLink
+              v-if="song.album"
+              :to="`/app/albums/${encodeURIComponent(song.album)}`"
+              class="text-gray-400 hover:text-yellow-400 focus:text-yellow-400 focus:outline-none"
+            >
+              {{ song.album }}
+            </NuxtLink>
+            <span v-else>-</span>
           </td>
           <td
             class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"

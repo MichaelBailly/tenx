@@ -30,15 +30,17 @@ defineProps<{
       >
         By Artist
       </NuxtLink>
-      <button
-        class="text-gray-400 hover:text-gray-300 pb-2 px-1 font-medium"
-        :class="{
-          'text-yellow-400 border-b-2 border-yellow-400':
-            activePage === 'albums',
-        }"
+      <NuxtLink
+        to="/app/albums"
+        :class="[
+          'pb-2 px-1 font-medium',
+          activePage === 'albums'
+            ? 'text-yellow-400 border-b-2 border-yellow-400'
+            : 'text-gray-400 hover:text-gray-300',
+        ]"
       >
         By Album
-      </button>
+      </NuxtLink>
       <button
         class="text-gray-400 hover:text-gray-300 pb-2 px-1 font-medium"
         :class="{
