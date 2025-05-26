@@ -8,7 +8,15 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "happy-dom",
-    exclude: ["**/*.spec.js"],
+    exclude: [
+      "**/*.spec.js",
+      "node_modules/**",
+      "dist/**",
+      ".nuxt/**",
+      "coverage/**",
+      "playwright-report/**",
+      "test-results/**",
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
