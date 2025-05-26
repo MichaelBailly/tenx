@@ -42,7 +42,12 @@ export function useAuth() {
         );
       }
 
-      const data = (await response.json()) as AuthResponse;
+      // The API returns a standardized response format: { success: true, data: AuthResponse }
+      const apiResponse = (await response.json()) as {
+        success: boolean;
+        data: AuthResponse;
+      };
+      const data = apiResponse.data;
 
       if (process.env.NODE_ENV !== "production") {
         logger.debug({ data }, "useAuth: Auth check result");
