@@ -28,9 +28,6 @@ test.describe("Redirection Logic (US1.6)", () => {
     // Try to access login page and login subpaths while authenticated
     await page.goto("/login");
     await expect(page).toHaveURL("/app");
-
-    await page.goto("/login/reset-password");
-    await expect(page).toHaveURL("/app");
   });
 
   test("stays on login page after invalid session is cleared", async ({

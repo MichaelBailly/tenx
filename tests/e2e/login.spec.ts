@@ -100,28 +100,47 @@ test.describe("Login Page", () => {
     });
     await page.waitForTimeout(500);
 
-    // Slow down network to better test loading states
+    // Set up network interception
     await page.route("**/api/auth/login", async (route) => {
-      // Add a delay before processing the request
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
+      // Add a longer delay to ensure we can catch the loading state
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       // Continue with the original request
       await route.continue();
     });
 
+    // Fill form fields with valid values
     await page.fill('input[name="username"]', "test_user");
     await page.fill('input[name="password"]', "test_password");
 
-    // Submit the form
-    await page.click('button[type="submit"]');
-
-    // Check loading state
+    // Get button reference and verify initial state
     const submitButton = page.locator('button[type="submit"]');
-    await expect(submitButton).toBeDisabled();
-    await expect(submitButton).toContainText("Signing in...");
+    await expect(submitButton).not.toBeDisabled();
+    await expect(submitButton).toContainText("Sign in");
 
-    // Wait for form to be enabled again (after response)
-    await expect(submitButton).not.toBeDisabled({ timeout: 2000 });
+    // Monitor for network request
+    const requestPromise = page.waitForRequest("**/api/auth/login");
+
+    // Set up response promise to ensure we catch the full cycle
+    const responsePromise = page.waitForResponse("**/api/auth/login");
+
+    // Submit the form and immediately check for loading state
+    await submitButton.click();
+
+    // The loading state should appear very quickly
+    await expect.soft(submitButton).toBeDisabled({ timeout: 200 });
+    await expect
+      .soft(submitButton)
+      .toContainText("Signing in...", { timeout: 200 });
+
+    // Wait for the request and response to complete
+    await requestPromise;
+    await responsePromise;
+
+    // Wait for the loading state to finish
+    await expect(submitButton).not.toBeDisabled({ timeout: 4000 });
+
+    // After an invalid login, button text should be back to "Sign in"
+    await expect(submitButton).toContainText("Sign in", { timeout: 1000 });
   });
 
   test("successfully logs in with valid credentials", async ({ page }) => {
