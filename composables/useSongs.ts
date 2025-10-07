@@ -4,6 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import type { ApiSong } from "~/types/api";
 import type { ApiError } from "~/types/common";
 import type { SongsApiResponse, SongsState } from "~/types/songs";
+import { formatDuration } from "../utils/format";
 
 // Create a global store for songs state
 const songsState = reactive<SongsState>({
@@ -247,13 +248,7 @@ export async function useSongs() {
   };
 
   // Format duration as mm:ss
-  const formatDuration = (seconds: number): string => {
-    if (!seconds) return "0:00";
-
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  };
+  // formatDuration is now imported from utils/format
 
   // Initial fetch uses URL parameters
   await fetchSongs(pageParam, limitParam, sortParam || getSortString(), qParam);
