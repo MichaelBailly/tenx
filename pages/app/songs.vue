@@ -8,6 +8,7 @@ import SongsNavigation from "~/components/shared/SongsNavigation.vue";
 import SongsTable from "~/components/shared/SongsTable.vue";
 import Pagination from "~/components/ui/Pagination.vue";
 import { useSongs } from "~/composables/useSongs";
+import type { ApiSong } from "~/types/api";
 
 // Define page meta to use our app layout
 definePageMeta({
@@ -39,6 +40,11 @@ const handleLimitChange = (event: Event) => {
   const select = event.target as HTMLSelectElement;
   const newLimit = Number(select.value);
   changeLimit(newLimit);
+};
+
+// Handler for edit song metadata
+const handleEditSong = (song: ApiSong) => {
+  navigateTo(`/app/review/${song._id}`);
 };
 </script>
 
@@ -77,6 +83,7 @@ const handleLimitChange = (event: Event) => {
       :sort-direction="songsState.sortDirection"
       :format-duration="formatDuration"
       @sort="changeSort"
+      @edit="handleEditSong"
     />
 
     <!-- Pagination -->

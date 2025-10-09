@@ -166,7 +166,7 @@ const handleDragStart = (e: DragEvent, song: ApiSong) => {
           <td class="px-6 py-4 whitespace-nowrap">
             <button
               class="text-gray-400 hover:text-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 rounded-full p-1"
-              tabindex="0" aria-label="Edit song metadata" @click="emit('edit', song)"
+              tabindex="0" title="Edit song metadata" aria-label="Edit song metadata" @click="emit('edit', song)"
               @keydown.enter="emit('edit', song)">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">

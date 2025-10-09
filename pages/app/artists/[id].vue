@@ -162,6 +162,11 @@ const goBackToArtists = () => {
   // Fallback to simple navigation if no query params were found
   router.push("/app/artists");
 };
+
+// Handle edit song navigation
+const handleEditSong = (song: ApiSong) => {
+  navigateTo(`/app/review/${song._id}`);
+};
 </script>
 
 <template>
@@ -278,6 +283,7 @@ const goBackToArtists = () => {
           :sortDirection="artistSongsState.sortDirection"
           :formatDuration="formatDuration"
           @sort="changeSort"
+          @edit="handleEditSong"
         />
       </div>
     </div>

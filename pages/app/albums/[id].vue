@@ -59,7 +59,7 @@
     <!-- Songs table -->
     <div v-else>
       <SongsTable :songs="albumSongsState.songs" :sort-field="albumSongsState.sortField"
-        :sort-direction="albumSongsState.sortDirection" :format-duration="formatDuration" @sort="changeSort" />
+        :sort-direction="albumSongsState.sortDirection" :format-duration="formatDuration" @sort="changeSort" @edit="handleEditSong" />
 
       <!-- Song count info -->
       <div class="mt-4 text-sm text-gray-400">
@@ -75,6 +75,7 @@ import { useRouter } from "vue-router";
 import SongsNavigation from "~/components/shared/SongsNavigation.vue";
 import SongsTable from "~/components/shared/SongsTable.vue";
 import { useAlbumSongs } from "~/composables/useAlbumSongs";
+import type { ApiSong } from "~/types/api";
 
 // Define page meta to use our app layout
 definePageMeta({ layout: "app" });
@@ -130,6 +131,11 @@ const handleRetry = () => {
 // Go back to albums list
 const goBackToAlbums = () => {
   router.push("/app/albums");
+};
+
+// Handle edit song navigation
+const handleEditSong = (song: ApiSong) => {
+  navigateTo(`/app/review/${song._id}`);
 };
 
 // Fetch album songs when component mounts
