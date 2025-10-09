@@ -37,9 +37,9 @@ export async function useAlbumSongs() {
         sort: getSortString(),
       };
 
-      // Use Nuxt's useFetch to get all songs
+      // Use Nuxt's useFetch to get album songs
       const { data, error } = await useFetch<SongsApiResponse>(
-        `/api/v1/songs?album=${encodeURIComponent(albumName)}`,
+        `/api/v1/albums/${encodeURIComponent(albumName)}/songs`,
         {
           method: "GET",
           params: query,
