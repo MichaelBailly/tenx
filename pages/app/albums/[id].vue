@@ -59,7 +59,8 @@
     <!-- Songs table -->
     <div v-else>
       <SongsTable :songs="albumSongsState.songs" :sort-field="albumSongsState.sortField"
-        :sort-direction="albumSongsState.sortDirection" :format-duration="formatDuration" @sort="changeSort" @edit="handleEditSong" />
+        :sort-direction="albumSongsState.sortDirection" :format-duration="formatDuration" @sort="changeSort"
+        @edit="handleEditSong" />
 
       <!-- Song count info -->
       <div class="mt-4 text-sm text-gray-400">

@@ -56,43 +56,26 @@ const handleEditSong = (song: ApiSong) => {
     <!-- Title and Search with icon toggling search input -->
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold text-yellow-400">My Songs</h1>
-      <SongSearch
-        :model-value="searchTerm"
-        @update:model-value="changeSearch"
-      />
+      <SongSearch :model-value="searchTerm" @update:model-value="changeSearch" />
     </div>
 
     <!-- Loading state -->
     <SongsLoadingState v-if="isLoading && !hasSongs" />
 
     <!-- Error state -->
-    <SongsErrorState
-      v-else-if="hasError"
-      :error="songsState.error"
-      @retry="handleRetry"
-    />
+    <SongsErrorState v-else-if="hasError" :error="songsState.error" @retry="handleRetry" />
 
     <!-- Empty state -->
     <SongsEmptyState v-else-if="!hasSongs" />
 
     <!-- Songs table -->
-    <SongsTable
-      v-else
-      :songs="songsState.songs"
-      :sort-field="songsState.sortField"
-      :sort-direction="songsState.sortDirection"
-      :format-duration="formatDuration"
-      @sort="changeSort"
-      @edit="handleEditSong"
-    />
+    <SongsTable v-else :songs="songsState.songs" :sort-field="songsState.sortField"
+      :sort-direction="songsState.sortDirection" :format-duration="formatDuration" @sort="changeSort"
+      @edit="handleEditSong" />
 
     <!-- Pagination -->
-    <Pagination
-      v-if="songsState.totalPages > 1"
-      :current-page="songsState.currentPage"
-      :total-pages="songsState.totalPages"
-      :on-page-change="changePage"
-    />
+    <Pagination v-if="songsState.totalPages > 1" :current-page="songsState.currentPage"
+      :total-pages="songsState.totalPages" :on-page-change="changePage" />
 
     <!-- Song count and pagination info -->
     <div class="mt-4 text-sm text-gray-400 flex justify-between items-center">
@@ -102,12 +85,9 @@ const handleEditSong = (song: ApiSong) => {
       </p>
       <div class="flex items-center">
         <label for="limit-select" class="mr-2">Songs per page:</label>
-        <select
-          id="limit-select"
-          v-model="songsState.limit"
+        <select id="limit-select" v-model="songsState.limit"
           class="bg-gray-800 border border-gray-700 rounded text-sm focus:border-yellow-400 focus:ring-yellow-400 text-gray-200"
-          @change="handleLimitChange($event)"
-        >
+          @change="handleLimitChange($event)">
           <option :value="10">10</option>
           <option :value="20">20</option>
           <option :value="50">50</option>

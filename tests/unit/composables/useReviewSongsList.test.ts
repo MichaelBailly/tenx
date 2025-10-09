@@ -19,9 +19,7 @@ vi.mock("#app", () => ({
 
 // Mock $fetch
 const mockFetch = vi.fn();
-vi.mock("#imports", () => ({
-  $fetch: mockFetch,
-}));
+vi.stubGlobal("$fetch", mockFetch);
 
 describe("useReviewSongsList", () => {
   let composable: ReturnType<typeof useReviewSongsList>;
@@ -102,7 +100,7 @@ describe("useReviewSongsList", () => {
     expect(composable.hasSongs.value).toBe(true);
   });
 
-  it("changes page correctly", () => {
+  it("changes page correctly", async () => {
     composable.reviewSongsState.totalPages = 5;
     mockFetch.mockResolvedValue({
       success: true,
@@ -112,7 +110,7 @@ describe("useReviewSongsList", () => {
       },
     });
     composable.changePage(3);
-    expect(mockFetch).toHaveBeenCalled();
+    await vi.waitFor(() => expect(mockFetch).toHaveBeenCalled());
   });
 
   it("does not change page if out of bounds", () => {
@@ -121,7 +119,7 @@ describe("useReviewSongsList", () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("changes limit correctly", () => {
+  it("changes limit correctly", async () => {
     mockFetch.mockResolvedValue({
       success: true,
       data: {
@@ -130,7 +128,7 @@ describe("useReviewSongsList", () => {
       },
     });
     composable.changeLimit(50);
-    expect(mockFetch).toHaveBeenCalled();
+    await vi.waitFor(() => expect(mockFetch).toHaveBeenCalled());
   });
 
   it("changes sort field correctly", () => {

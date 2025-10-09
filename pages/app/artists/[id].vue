@@ -178,23 +178,9 @@ const handleEditSong = (song: ApiSong) => {
     <div class="flex items-center mb-6">
       <button
         class="text-yellow-400 hover:text-yellow-300 p-1 rounded focus:outline-none focus:ring-2 focus:ring-yellow-500"
-        title="Back to Artists"
-        aria-label="Back to Artists"
-        @click="goBackToArtists"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15 19l-7-7 7-7"
-          />
+        title="Back to Artists" aria-label="Back to Artists" @click="goBackToArtists">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
       <h1 class="text-2xl font-bold text-yellow-400 ml-2">
@@ -204,47 +190,26 @@ const handleEditSong = (song: ApiSong) => {
 
     <!-- Loading state -->
     <div v-if="isLoading && !hasSongs" class="text-center py-12">
-      <div
-        class="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto"
-      />
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto" />
       <p class="mt-4 text-gray-400">Loading songs...</p>
     </div>
 
     <!-- Error state -->
-    <div
-      v-else-if="hasError"
-      class="bg-red-900/30 p-4 rounded-md border border-red-800"
-    >
+    <div v-else-if="hasError" class="bg-red-900/30 p-4 rounded-md border border-red-800">
       <p class="text-red-400">{{ artistSongsState.error }}</p>
       <button
         class="mt-2 px-4 py-2 bg-red-700 text-white rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-        tabindex="0"
-        aria-label="Try again"
-        @click="handleRetry"
-        @keydown.enter="handleRetry"
-      >
+        tabindex="0" aria-label="Try again" @click="handleRetry" @keydown.enter="handleRetry">
         Try Again
       </button>
     </div>
 
     <!-- Empty state -->
-    <div
-      v-else-if="!hasSongs"
-      class="text-center py-12 bg-gray-800 rounded-lg border border-gray-700"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-16 w-16 text-gray-600 mx-auto"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-        />
+    <div v-else-if="!hasSongs" class="text-center py-12 bg-gray-800 rounded-lg border border-gray-700">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-600 mx-auto" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
       </svg>
       <h2 class="mt-4 text-lg font-medium text-yellow-400">
         No songs found for {{ artistId }}
@@ -255,46 +220,28 @@ const handleEditSong = (song: ApiSong) => {
     </div>
 
     <!-- Songs table -->
-    <div
-      v-else
-      class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700"
-    >
+    <div v-else class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700">
       <!-- Album sections -->
       <div v-for="album in songsByAlbum" :key="album.name" class="mb-6">
         <!-- Album header with image -->
-        <div
-          class="flex items-center bg-gray-900 px-6 py-4 border-t border-gray-700"
-        >
+        <div class="flex items-center bg-gray-900 px-6 py-4 border-t border-gray-700">
           <div class="flex-shrink-0 mr-4">
-            <img
-              :src="album.imagePath"
-              :alt="`${album.name} album cover`"
-              class="h-16 w-16 rounded-md object-cover shadow-md"
-              loading="lazy"
-            />
+            <img :src="album.imagePath" :alt="`${album.name} album cover`"
+              class="h-16 w-16 rounded-md object-cover shadow-md" loading="lazy" />
           </div>
           <h2 class="text-lg font-medium text-yellow-400">{{ album.name }}</h2>
         </div>
 
         <!-- Album songs -->
-        <SongsTable
-          :songs="album.songs"
-          :sortField="artistSongsState.sortField"
-          :sortDirection="artistSongsState.sortDirection"
-          :formatDuration="formatDuration"
-          @sort="changeSort"
-          @edit="handleEditSong"
-        />
+        <SongsTable :songs="album.songs" :sortField="artistSongsState.sortField"
+          :sortDirection="artistSongsState.sortDirection" :formatDuration="formatDuration" @sort="changeSort"
+          @edit="handleEditSong" />
       </div>
     </div>
 
     <!-- Pagination -->
-    <Pagination
-      v-if="artistSongsState.totalPages > 1"
-      :current-page="artistSongsState.currentPage"
-      :total-pages="artistSongsState.totalPages"
-      :on-page-change="changePage"
-    />
+    <Pagination v-if="artistSongsState.totalPages > 1" :current-page="artistSongsState.currentPage"
+      :total-pages="artistSongsState.totalPages" :on-page-change="changePage" />
 
     <!-- Song count and pagination info -->
     <div class="mt-4 text-sm text-gray-400 flex justify-between items-center">
@@ -304,12 +251,9 @@ const handleEditSong = (song: ApiSong) => {
       </p>
       <div class="flex items-center">
         <label for="limit-select" class="mr-2">Songs per page:</label>
-        <select
-          id="limit-select"
-          v-model="artistSongsState.limit"
+        <select id="limit-select" v-model="artistSongsState.limit"
           class="bg-gray-800 border border-gray-700 rounded text-sm focus:border-yellow-400 focus:ring-yellow-400 text-gray-200"
-          @change="handleLimitChange($event)"
-        >
+          @change="handleLimitChange($event)">
           <option :value="10">10</option>
           <option :value="20">20</option>
           <option :value="50">50</option>
