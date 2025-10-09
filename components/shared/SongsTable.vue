@@ -13,6 +13,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "sort", field: string): void;
+  (e: "edit", song: ApiSong): void;
 }>();
 
 // Initialize player queue and audio player composables
@@ -87,123 +88,62 @@ const handleDragStart = (e: DragEvent, song: ApiSong) => {
     <table class="min-w-full divide-y divide-gray-700">
       <thead class="bg-gray-900">
         <tr>
-          <th
-            class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
-          />
-          <th
-            class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
-          >
-            <button
-              class="group flex items-center focus:outline-none focus:text-yellow-400"
-              tabindex="0"
-              aria-label="Sort by title"
-              @click="emit('sort', 'title')"
-              @keydown="(e) => handleSortKeyDown(e, 'title')"
-            >
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider" />
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+            <button class="group flex items-center focus:outline-none focus:text-yellow-400" tabindex="0"
+              aria-label="Sort by title" @click="emit('sort', 'title')" @keydown="(e) => handleSortKeyDown(e, 'title')">
               Title {{ getSortIndicator("title") }}
             </button>
           </th>
-          <th
-            class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
-          >
-            <button
-              class="group flex items-center focus:outline-none focus:text-yellow-400"
-              tabindex="0"
-              aria-label="Sort by artist"
-              @click="emit('sort', 'artist')"
-              @keydown="(e) => handleSortKeyDown(e, 'artist')"
-            >
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+            <button class="group flex items-center focus:outline-none focus:text-yellow-400" tabindex="0"
+              aria-label="Sort by artist" @click="emit('sort', 'artist')"
+              @keydown="(e) => handleSortKeyDown(e, 'artist')">
               Artist {{ getSortIndicator("artist") }}
             </button>
           </th>
-          <th
-            class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
-          >
-            <button
-              class="group flex items-center focus:outline-none focus:text-yellow-400"
-              tabindex="0"
-              aria-label="Sort by album"
-              @click="emit('sort', 'album')"
-              @keydown="(e) => handleSortKeyDown(e, 'album')"
-            >
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+            <button class="group flex items-center focus:outline-none focus:text-yellow-400" tabindex="0"
+              aria-label="Sort by album" @click="emit('sort', 'album')" @keydown="(e) => handleSortKeyDown(e, 'album')">
               Album {{ getSortIndicator("album") }}
             </button>
           </th>
-          <th
-            class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
-          >
-            <button
-              class="group flex items-center focus:outline-none focus:text-yellow-400"
-              tabindex="0"
-              aria-label="Sort by duration"
-              @click="emit('sort', 'duration')"
-              @keydown="(e) => handleSortKeyDown(e, 'duration')"
-            >
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+            <button class="group flex items-center focus:outline-none focus:text-yellow-400" tabindex="0"
+              aria-label="Sort by duration" @click="emit('sort', 'duration')"
+              @keydown="(e) => handleSortKeyDown(e, 'duration')">
               Duration {{ getSortIndicator("duration") }}
             </button>
+          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+            Actions
           </th>
         </tr>
       </thead>
       <tbody class="bg-gray-800 divide-y divide-gray-700">
-        <tr
-          v-for="song in props.songs"
-          :key="song._id"
-          class="hover:bg-gray-700 cursor-pointer transition-colors"
-          draggable="true"
-          @dragstart="(e) => handleDragStart(e, song)"
-        >
+        <tr v-for="song in props.songs" :key="song._id" class="hover:bg-gray-700 cursor-pointer transition-colors"
+          draggable="true" @dragstart="(e) => handleDragStart(e, song)">
           <td class="px-6 py-4 whitespace-nowrap">
             <button
               class="text-yellow-400 hover:text-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 rounded-full p-1"
-              tabindex="0"
-              @click="handlePlayClick(song)"
-              @keydown.enter="handlePlayClick(song)"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
+              tabindex="0" @click="handlePlayClick(song)" @keydown.enter="handlePlayClick(song)">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </button>
           </td>
-          <td
-            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-200"
-            tabindex="0"
-          >
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-200" tabindex="0">
             {{ song.title }}
           </td>
-          <td
-            class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"
-            @click.stop
-          >
-            <div
-              v-if="song.tokenartists && song.tokenartists.length"
-              class="flex flex-wrap gap-1"
-            >
-              <template
-                v-for="(artist, index) in song.tokenartists"
-                :key="artist"
-              >
-                <NuxtLink
-                  :to="`/app/artists/${encodeURIComponent(artist)}`"
-                  class="text-yellow-400 hover:text-yellow-300 focus:outline-none focus:text-yellow-300"
-                  tabindex="0"
-                >
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400" @click.stop>
+            <div v-if="song.tokenartists && song.tokenartists.length" class="flex flex-wrap gap-1">
+              <template v-for="(artist, index) in song.tokenartists" :key="artist">
+                <NuxtLink :to="`/app/artists/${encodeURIComponent(artist)}`"
+                  class="text-yellow-400 hover:text-yellow-300 focus:outline-none focus:text-yellow-300" tabindex="0">
                   {{ artist }}
                 </NuxtLink>
                 <span v-if="index < song.tokenartists.length - 1">, </span>
@@ -213,24 +153,27 @@ const handleDragStart = (e: DragEvent, song: ApiSong) => {
               {{ song.artist }}
             </span>
           </td>
-          <td
-            class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"
-            tabindex="0"
-          >
-            <NuxtLink
-              v-if="song.album"
-              :to="`/app/albums/${encodeURIComponent(song.album)}`"
-              class="text-gray-400 hover:text-yellow-400 focus:text-yellow-400 focus:outline-none"
-            >
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400" tabindex="0">
+            <NuxtLink v-if="song.album" :to="`/app/albums/${encodeURIComponent(song.album)}`"
+              class="text-gray-400 hover:text-yellow-400 focus:text-yellow-400 focus:outline-none">
               {{ song.album }}
             </NuxtLink>
             <span v-else>-</span>
           </td>
-          <td
-            class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"
-            tabindex="0"
-          >
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400" tabindex="0">
             {{ props.formatDuration(song.duration) }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <button
+              class="text-gray-400 hover:text-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 rounded-full p-1"
+              tabindex="0" aria-label="Edit song metadata" @click="emit('edit', song)"
+              @keydown.enter="emit('edit', song)">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
           </td>
         </tr>
       </tbody>
